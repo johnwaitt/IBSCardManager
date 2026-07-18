@@ -1,0 +1,199 @@
+@model IBSCardManager.Entities.Card
+
+@{
+    ViewData["Title"] = "Add Card";
+}
+
+<h1>Add Card</h1>
+
+<hr />
+
+<form asp-action="Create" method="post">
+    <div asp-validation-summary="ModelOnly"
+         class="text-danger"></div>
+
+    <div class="row">
+        <div class="col-md-6 mb-3">
+            <label asp-for="Subject"
+                   class="form-label"></label>
+            <input asp-for="Subject"
+                   class="form-control" />
+            <span asp-validation-for="Subject"
+                  class="text-danger"></span>
+        </div>
+
+        <div class="col-md-6 mb-3">
+            <label asp-for="Team"
+                   class="form-label"></label>
+            <input asp-for="Team"
+                   class="form-control" />
+            <span asp-validation-for="Team"
+                  class="text-danger"></span>
+        </div>
+
+        <div class="col-md-8 mb-3">
+            <label asp-for="ProductId"
+                   class="form-label">
+                Product / Set
+            </label>
+
+            <select asp-for="ProductId"
+                    asp-items="ViewBag.ProductOptions"
+                    class="form-select">
+                <option value="">
+                    -- Select Product --
+                </option>
+            </select>
+
+            <span asp-validation-for="ProductId"
+                  class="text-danger"></span>
+        </div>
+
+        <div class="col-md-4 mb-3">
+            <label asp-for="Category"
+                   class="form-label"></label>
+            <input asp-for="Category"
+                   class="form-control"
+                   readonly />
+        </div>
+
+        <div class="col-md-4 mb-3">
+            <label asp-for="CardNumber"
+                   class="form-label"></label>
+            <input asp-for="CardNumber"
+                   class="form-control" />
+        </div>
+
+        <div class="col-md-4 mb-3">
+            <label asp-for="Variety"
+                   class="form-label"></label>
+            <input asp-for="Variety"
+                   class="form-control" />
+        </div>
+
+        <div class="col-md-4 mb-3">
+            <label asp-for="Serial"
+                   class="form-label"></label>
+            <input asp-for="Serial"
+                   class="form-control"
+                   placeholder="Example: 3/5" />
+        </div>
+
+        <div class="col-md-3 mb-3">
+            <label asp-for="Quantity"
+                   class="form-label"></label>
+            <input asp-for="Quantity"
+                   class="form-control" />
+        </div>
+
+        <div class="col-md-3 mb-3">
+            <label asp-for="GradeIssuer"
+                   class="form-label"></label>
+            <input asp-for="GradeIssuer"
+                   class="form-control"
+                   placeholder="PSA, BGS, SGC" />
+        </div>
+
+        <div class="col-md-3 mb-3">
+            <label asp-for="Grade"
+                   class="form-label"></label>
+            <input asp-for="Grade"
+                   class="form-control" />
+        </div>
+
+        <div class="col-md-3 mb-3">
+            <label asp-for="CertNumber"
+                   class="form-label"></label>
+            <input asp-for="CertNumber"
+                   class="form-control" />
+        </div>
+
+        <div class="col-md-3 mb-3 form-check">
+            <input asp-for="IsRookie"
+                   class="form-check-input" />
+            <label asp-for="IsRookie"
+                   class="form-check-label"></label>
+        </div>
+
+        <div class="col-md-3 mb-3 form-check">
+            <input asp-for="IsAutograph"
+                   class="form-check-input" />
+            <label asp-for="IsAutograph"
+                   class="form-check-label"></label>
+        </div>
+
+        <div class="col-md-3 mb-3 form-check">
+            <input asp-for="IsRelic"
+                   class="form-check-input" />
+            <label asp-for="IsRelic"
+                   class="form-check-label"></label>
+        </div>
+
+        <div class="col-md-4 mb-3">
+            <label asp-for="MyCost"
+                   class="form-label"></label>
+            <input asp-for="MyCost"
+                   class="form-control" />
+        </div>
+
+        <div class="col-md-4 mb-3">
+            <label asp-for="MyValue"
+                   class="form-label"></label>
+            <input asp-for="MyValue"
+                   class="form-control" />
+        </div>
+
+        <div class="col-md-4 mb-3">
+            <label asp-for="ListingPrice"
+                   class="form-label"></label>
+            <input asp-for="ListingPrice"
+                   class="form-control" />
+        </div>
+
+        <div class="col-md-4 mb-3">
+            <label asp-for="StorageBox"
+                   class="form-label"></label>
+            <input asp-for="StorageBox"
+                   class="form-control" />
+        </div>
+
+        <div class="col-md-4 mb-3">
+            <label asp-for="StorageRow"
+                   class="form-label"></label>
+            <input asp-for="StorageRow"
+                   class="form-control" />
+        </div>
+
+        <div class="col-md-4 mb-3">
+            <label asp-for="StorageBin"
+                   class="form-label"></label>
+            <input asp-for="StorageBin"
+                   class="form-control" />
+        </div>
+
+        <div class="col-12 mb-3">
+            <label asp-for="MyNotes"
+                   class="form-label"></label>
+            <textarea asp-for="MyNotes"
+                      class="form-control"
+                      rows="4"></textarea>
+        </div>
+    </div>
+
+    <button type="submit"
+            class="btn btn-primary">
+        Save Card
+    </button>
+
+    <a asp-action="Index"
+       class="btn btn-secondary">
+        Cancel
+    </a>
+</form>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync(
+            "_ValidationScriptsPartial");
+    }
+}

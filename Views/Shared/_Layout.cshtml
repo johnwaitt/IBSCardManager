@@ -1,0 +1,97 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <title>@ViewData["Title"] - IBS Baseball Card Manager</title>
+
+    <link rel="stylesheet"
+          href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+
+    <link rel="stylesheet"
+          href="~/css/site.css"
+          asp-append-version="true" />
+</head>
+
+<body>
+    <div class="app-shell">
+
+        <aside class="sidebar">
+            <div class="sidebar-brand">
+                <div class="brand-title">IBS</div>
+                <div class="brand-subtitle">Baseball Card Manager</div>
+            </div>
+
+            <nav class="sidebar-nav">
+                <a asp-controller="Home"
+                   asp-action="Index"
+                   class="nav-link">
+                    Dashboard
+                </a>
+
+                <a asp-controller="Cards"
+                   asp-action="Index"
+                   class="nav-link">
+                    Inventory
+                </a>
+
+                <a href="#" class="nav-link disabled-link">
+                    Products
+                </a>
+
+                <a href="#" class="nav-link disabled-link">
+                    Scanner
+                </a>
+
+                <a href="#" class="nav-link disabled-link">
+                    Images
+                </a>
+
+                <a href="#" class="nav-link disabled-link">
+                    Imports
+                </a>
+
+                <a href="#" class="nav-link disabled-link">
+                    Pricing
+                </a>
+
+                <a href="#" class="nav-link disabled-link">
+                    eBay
+                </a>
+
+                <a href="#" class="nav-link disabled-link">
+                    Reports
+                </a>
+
+                <a href="#" class="nav-link disabled-link">
+                    Settings
+                </a>
+            </nav>
+        </aside>
+
+        <main class="main-content">
+            <header class="topbar">
+                <div>
+                    <strong>IBS Baseball Card Manager</strong>
+                </div>
+
+                <div class="text-muted">
+                    Local Database
+                </div>
+            </header>
+
+            <section class="content-area">
+                @RenderBody()
+            </section>
+        </main>
+
+    </div>
+
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="~/js/site.js" asp-append-version="true"></script>
+
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>

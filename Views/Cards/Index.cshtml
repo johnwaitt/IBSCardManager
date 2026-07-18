@@ -1,0 +1,203 @@
+@model IEnumerable<IBSCardManager.Entities.Card>
+
+@{
+    ViewData["Title"] = "Index";
+}
+
+<h1>Index</h1>
+
+<p>
+    <a asp-action="Create">Create New</a>
+</p>
+<table class="table">
+    <thead>
+        <tr>
+            <th>
+                @Html.DisplayNameFor(model => model.Subject)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.Team)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.Year)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.Set)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.CardNumber)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.Variety)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.Serial)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.Category)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.GradeIssuer)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.Grade)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.AutographGrade)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.CertNumber)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.IsRookie)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.IsAutograph)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.IsRelic)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.Quantity)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.MyCost)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.PsaEstimate)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.MyValue)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.ListingPrice)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.ListingStatus)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.StorageBox)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.StorageRow)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.StorageBin)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.FrontImagePath)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.BackImagePath)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.MyNotes)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.CreatedDate)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.ModifiedDate)
+            </th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+@foreach (var item in Model) {
+        <tr>
+            <td>
+                @Html.DisplayFor(model => item.Subject)
+            </td>
+            <td>
+                @Html.DisplayFor(model => item.Team)
+            </td>
+            <td>
+                @Html.DisplayFor(model => item.Year)
+            </td>
+            <td>
+                @Html.DisplayFor(model => item.Set)
+            </td>
+            <td>
+                @Html.DisplayFor(model => item.CardNumber)
+            </td>
+            <td>
+                @Html.DisplayFor(model => item.Variety)
+            </td>
+            <td>
+                @Html.DisplayFor(model => item.Serial)
+            </td>
+            <td>
+                @Html.DisplayFor(model => item.Category)
+            </td>
+            <td>
+                @Html.DisplayFor(model => item.GradeIssuer)
+            </td>
+            <td>
+                @Html.DisplayFor(model => item.Grade)
+            </td>
+            <td>
+                @Html.DisplayFor(model => item.AutographGrade)
+            </td>
+            <td>
+                @Html.DisplayFor(model => item.CertNumber)
+            </td>
+            <td>
+                @Html.DisplayFor(model => item.IsRookie)
+            </td>
+            <td>
+                @Html.DisplayFor(model => item.IsAutograph)
+            </td>
+            <td>
+                @Html.DisplayFor(model => item.IsRelic)
+            </td>
+            <td>
+                @Html.DisplayFor(model => item.Quantity)
+            </td>
+            <td>
+                @Html.DisplayFor(model => item.MyCost)
+            </td>
+            <td>
+                @Html.DisplayFor(model => item.PsaEstimate)
+            </td>
+            <td>
+                @Html.DisplayFor(model => item.MyValue)
+            </td>
+            <td>
+                @Html.DisplayFor(model => item.ListingPrice)
+            </td>
+            <td>
+                @Html.DisplayFor(model => item.ListingStatus)
+            </td>
+            <td>
+                @Html.DisplayFor(model => item.StorageBox)
+            </td>
+            <td>
+                @Html.DisplayFor(model => item.StorageRow)
+            </td>
+            <td>
+                @Html.DisplayFor(model => item.StorageBin)
+            </td>
+            <td>
+                @Html.DisplayFor(model => item.FrontImagePath)
+            </td>
+            <td>
+                @Html.DisplayFor(model => item.BackImagePath)
+            </td>
+            <td>
+                @Html.DisplayFor(model => item.MyNotes)
+            </td>
+            <td>
+                @Html.DisplayFor(model => item.CreatedDate)
+            </td>
+            <td>
+                @Html.DisplayFor(model => item.ModifiedDate)
+            </td>
+            <td>
+                <a asp-action="Edit" asp-route-id="@item.CardId">Edit</a> |
+                <a asp-action="Details" asp-route-id="@item.CardId">Details</a> |
+                <a asp-action="Delete" asp-route-id="@item.CardId">Delete</a>
+            </td>
+        </tr>
+}
+    </tbody>
+</table>

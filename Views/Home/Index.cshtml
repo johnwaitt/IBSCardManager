@@ -1,0 +1,97 @@
+﻿@{
+    ViewData["Title"] = "Dashboard";
+}
+
+<div class="page-heading">
+    <div>
+        <h1>Dashboard</h1>
+        <p>Baseball card inventory, pricing, scanning and sales.</p>
+    </div>
+
+    <a asp-controller="Cards"
+       asp-action="Create"
+       class="btn btn-primary">
+        Add Card
+    </a>
+</div>
+
+<div class="dashboard-grid">
+
+    <div class="stat-card">
+        <div class="stat-label">Cards Owned</div>
+        <div class="stat-value">@ViewBag.TotalCards</div>
+        <div class="stat-footer">Total quantity</div>
+    </div>
+
+    <div class="stat-card">
+        <div class="stat-label">Collection Value</div>
+        <div class="stat-value">@(((decimal)ViewBag.CollectionValue).ToString("C"))</div>
+        <div class="stat-footer">Your current value</div>
+    </div>
+
+    <div class="stat-card">
+        <div class="stat-label">Graded Cards</div>
+        <div class="stat-value">@ViewBag.GradedCards</div>
+        <div class="stat-footer">PSA, Beckett and others</div>
+    </div>
+
+    <div class="stat-card">
+        <div class="stat-label">Active Listings</div>
+        <div class="stat-value">@ViewBag.ActiveListings</div>
+        <div class="stat-footer">eBay listings</div>
+    </div>
+
+</div>
+
+<div class="dashboard-panel">
+    <div class="panel-header">
+        <div>
+            <h2>Inventory Search</h2>
+            <p>Search by player, team, set or card number.</p>
+        </div>
+    </div>
+
+    <form asp-controller="Cards"
+          asp-action="Index"
+          method="get"
+          class="search-row">
+
+        <input type="text"
+               name="search"
+               class="form-control"
+               placeholder="Player, team, set, card number or certification..." />
+
+        <button type="submit"
+                class="btn btn-primary">
+            Search Inventory
+        </button>
+    </form>
+</div>
+
+<div class="quick-actions">
+
+    <a asp-controller="Cards"
+       asp-action="Index"
+       class="action-card">
+        <strong>Inventory</strong>
+        <span>View and manage cards</span>
+    </a>
+
+    <a asp-controller="Cards"
+       asp-action="Create"
+       class="action-card">
+        <strong>Add Card</strong>
+        <span>Create a new inventory record</span>
+    </a>
+
+    <div class="action-card unavailable">
+        <strong>Scanner</strong>
+        <span>Epson intake coming next</span>
+    </div>
+
+    <div class="action-card unavailable">
+        <strong>CSV Import</strong>
+        <span>Collection and eBay imports</span>
+    </div>
+
+</div>
