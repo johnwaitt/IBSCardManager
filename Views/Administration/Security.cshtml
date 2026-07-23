@@ -15,7 +15,7 @@
 
     @if (TempData["SecurityMessage"] is string message)
     {
-        <div class="alert alert-success">@message</div>
+        <div class="alert alert-info">@message</div>
     }
     @if (TempData["ConnectionsMessage"] is string connectionMessage)
     {
@@ -87,11 +87,10 @@
 
                 <hr />
 
-                <form asp-action="TestConnection" method="post" class="d-flex flex-wrap align-items-center gap-2">
+                <form asp-action="TestOpenAiConnection" method="post" class="d-flex flex-wrap align-items-center gap-2">
                     @Html.AntiForgeryToken()
-                    <input type="hidden" name="providerName" value="OpenAI" />
                     <button type="submit" class="btn btn-outline-success">Test OpenAI connection</button>
-                    <small class="text-muted">Runs a live provider check using the protected credentials.</small>
+                    <small class="text-muted">Runs a live connection test using the same key the scanner will use.</small>
                 </form>
             </div>
         </div>
@@ -103,7 +102,7 @@
                     <li class="mb-2">Create an OpenAI API key for this application.</li>
                     <li class="mb-2">Paste it above and save the protected credential.</li>
                     <li class="mb-2">Run <strong>Test OpenAI connection</strong>.</li>
-                    <li>Return to Scanner and enable ChatGPT analysis.</li>
+                    <li>Return to Scanner, accept a front/back pair, then click <strong>Analyze with ChatGPT</strong>.</li>
                 </ol>
             </div>
 
