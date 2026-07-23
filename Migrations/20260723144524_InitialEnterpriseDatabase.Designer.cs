@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace IBSCardManager.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20260723113932_AddCatalogCompatibilityMetadataV201")]
-    partial class AddCatalogCompatibilityMetadataV201
+    [Migration("20260723144524_InitialEnterpriseDatabase")]
+    partial class InitialEnterpriseDatabase
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -644,6 +644,87 @@ namespace IBSCardManager.Migrations
                     b.ToTable("CollectionSnapshots");
                 });
 
+            modelBuilder.Entity("IBSCardManager.Entities.DecisionHistoryRecord", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("AlternativeOptionsJson")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("ApplicationVersion")
+                        .HasMaxLength(40)
+                        .HasColumnType("nvarchar(40)");
+
+                    b.Property<string>("CatalogVersion")
+                        .HasMaxLength(80)
+                        .HasColumnType("nvarchar(80)");
+
+                    b.Property<DateTime?>("CompletedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<decimal>("ConfidenceScore")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("DecisionStatus")
+                        .HasColumnType("int");
+
+                    b.Property<int>("DecisionType")
+                        .HasColumnType("int");
+
+                    b.Property<int>("EvidenceCount")
+                        .HasColumnType("int");
+
+                    b.Property<string>("ExplanationSummary")
+                        .HasMaxLength(1000)
+                        .HasColumnType("nvarchar(1000)");
+
+                    b.Property<string>("MissingDataSummary")
+                        .HasMaxLength(1000)
+                        .HasColumnType("nvarchar(1000)");
+
+                    b.Property<string>("ModelVersion")
+                        .HasMaxLength(120)
+                        .HasColumnType("nvarchar(120)");
+
+                    b.Property<Guid?>("PreviousDecisionId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("PromptVersion")
+                        .HasMaxLength(120)
+                        .HasColumnType("nvarchar(120)");
+
+                    b.Property<string>("RuleVersion")
+                        .HasMaxLength(120)
+                        .HasColumnType("nvarchar(120)");
+
+                    b.Property<string>("SelectedOption")
+                        .HasMaxLength(300)
+                        .HasColumnType("nvarchar(300)");
+
+                    b.Property<string>("SubjectStableId")
+                        .IsRequired()
+                        .HasMaxLength(150)
+                        .HasColumnType("nvarchar(150)");
+
+                    b.Property<int>("SubjectType")
+                        .HasColumnType("int");
+
+                    b.Property<string>("UserAction")
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("SubjectType", "SubjectStableId", "CreatedAt");
+
+                    b.ToTable("DecisionHistoryRecords");
+                });
+
             modelBuilder.Entity("IBSCardManager.Entities.InventoryAnalyticsSummary", b =>
                 {
                     b.Property<Guid>("InventoryCardId")
@@ -702,6 +783,294 @@ namespace IBSCardManager.Migrations
                     b.HasIndex("LastCalculatedAt");
 
                     b.ToTable("InventoryAnalyticsSummaries");
+                });
+
+            modelBuilder.Entity("IBSCardManager.Entities.KnowledgeAuditRecord", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("AfterValuesJson")
+                        .HasMaxLength(2000)
+                        .HasColumnType("nvarchar(2000)");
+
+                    b.Property<string>("ApplicationVersion")
+                        .HasMaxLength(40)
+                        .HasColumnType("nvarchar(40)");
+
+                    b.Property<string>("BeforeValuesJson")
+                        .HasMaxLength(2000)
+                        .HasColumnType("nvarchar(2000)");
+
+                    b.Property<string>("CatalogVersion")
+                        .HasMaxLength(80)
+                        .HasColumnType("nvarchar(80)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("ModelVersion")
+                        .HasMaxLength(120)
+                        .HasColumnType("nvarchar(120)");
+
+                    b.Property<string>("OperationResult")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<int>("OperationType")
+                        .HasColumnType("int");
+
+                    b.Property<string>("RuleVersion")
+                        .HasMaxLength(120)
+                        .HasColumnType("nvarchar(120)");
+
+                    b.Property<string>("SubjectStableId")
+                        .HasMaxLength(150)
+                        .HasColumnType("nvarchar(150)");
+
+                    b.Property<string>("UserId")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CreatedAt");
+
+                    b.ToTable("KnowledgeAuditRecords");
+                });
+
+            modelBuilder.Entity("IBSCardManager.Entities.KnowledgeEvidence", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<decimal>("ConfidenceContribution")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("EvidenceSummary")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<int>("EvidenceType")
+                        .HasColumnType("int");
+
+                    b.Property<bool>("IsContradicting")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsSupporting")
+                        .HasColumnType("bit");
+
+                    b.Property<Guid>("KnowledgeRecordId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("ModelVersion")
+                        .HasMaxLength(120)
+                        .HasColumnType("nvarchar(120)");
+
+                    b.Property<string>("NormalizedValue")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<DateTime>("ObservedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("RawValue")
+                        .HasMaxLength(2000)
+                        .HasColumnType("nvarchar(2000)");
+
+                    b.Property<string>("RuleVersion")
+                        .HasMaxLength(120)
+                        .HasColumnType("nvarchar(120)");
+
+                    b.Property<string>("SourceRecordId")
+                        .HasMaxLength(150)
+                        .HasColumnType("nvarchar(150)");
+
+                    b.Property<int>("SourceType")
+                        .HasColumnType("int");
+
+                    b.Property<string>("SourceUri")
+                        .HasMaxLength(1000)
+                        .HasColumnType("nvarchar(1000)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("KnowledgeRecordId");
+
+                    b.ToTable("KnowledgeEvidence");
+                });
+
+            modelBuilder.Entity("IBSCardManager.Entities.KnowledgeRecord", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<int>("CatalogConfirmationCount")
+                        .HasColumnType("int");
+
+                    b.Property<decimal>("ConfidenceScore")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime>("FirstObservedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("ImageMatchConfirmationCount")
+                        .HasColumnType("int");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsDeprecated")
+                        .HasColumnType("bit");
+
+                    b.Property<int>("KnowledgeType")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("LastObservedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime?>("LastVerifiedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("MarketplaceConfirmationCount")
+                        .HasColumnType("int");
+
+                    b.Property<string>("ModelVersion")
+                        .HasMaxLength(120)
+                        .HasColumnType("nvarchar(120)");
+
+                    b.Property<string>("NormalizedValue")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<Guid?>("ReplacedByKnowledgeRecordId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("RuleVersion")
+                        .HasMaxLength(120)
+                        .HasColumnType("nvarchar(120)");
+
+                    b.Property<int>("SourceCount")
+                        .HasColumnType("int");
+
+                    b.Property<string>("StableId")
+                        .IsRequired()
+                        .HasMaxLength(150)
+                        .HasColumnType("nvarchar(150)");
+
+                    b.Property<string>("StatementKey")
+                        .IsRequired()
+                        .HasMaxLength(120)
+                        .HasColumnType("nvarchar(120)");
+
+                    b.Property<string>("StatementValue")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<string>("SubjectStableId")
+                        .IsRequired()
+                        .HasMaxLength(150)
+                        .HasColumnType("nvarchar(150)");
+
+                    b.Property<int>("SubjectType")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("UserConfirmationCount")
+                        .HasColumnType("int");
+
+                    b.Property<int>("UserCorrectionCount")
+                        .HasColumnType("int");
+
+                    b.Property<int>("VerificationLevel")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ConfidenceScore");
+
+                    b.HasIndex("CreatedAt");
+
+                    b.HasIndex("KnowledgeType");
+
+                    b.HasIndex("StableId")
+                        .IsUnique();
+
+                    b.HasIndex("UpdatedAt");
+
+                    b.HasIndex("VerificationLevel");
+
+                    b.HasIndex("SubjectType", "SubjectStableId");
+
+                    b.ToTable("KnowledgeRecords");
+                });
+
+            modelBuilder.Entity("IBSCardManager.Entities.KnowledgeReviewItem", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("ItemType")
+                        .HasColumnType("int");
+
+                    b.Property<Guid?>("KnowledgeRecordId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Notes")
+                        .HasMaxLength(2000)
+                        .HasColumnType("nvarchar(2000)");
+
+                    b.Property<int>("Priority")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("ReviewedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("RuleVersion")
+                        .HasMaxLength(120)
+                        .HasColumnType("nvarchar(120)");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("int");
+
+                    b.Property<string>("SubjectStableId")
+                        .IsRequired()
+                        .HasMaxLength(150)
+                        .HasColumnType("nvarchar(150)");
+
+                    b.Property<int>("SubjectType")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Summary")
+                        .IsRequired()
+                        .HasMaxLength(300)
+                        .HasColumnType("nvarchar(300)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CreatedAt");
+
+                    b.HasIndex("Status");
+
+                    b.ToTable("KnowledgeReviewItems");
                 });
 
             modelBuilder.Entity("IBSCardManager.Entities.Product", b =>
@@ -950,6 +1319,77 @@ namespace IBSCardManager.Migrations
                     b.ToTable("UserAnalyticsPreferences");
                 });
 
+            modelBuilder.Entity("IBSCardManager.Entities.UserCorrection", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<bool>("AppliedToCurrentRecord")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("CorrectedValue")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<int>("CorrectionType")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<bool>("EligibleForLearning")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("FieldName")
+                        .IsRequired()
+                        .HasMaxLength(120)
+                        .HasColumnType("nvarchar(120)");
+
+                    b.Property<int>("LearningStatus")
+                        .HasColumnType("int");
+
+                    b.Property<string>("ModelVersion")
+                        .HasMaxLength(120)
+                        .HasColumnType("nvarchar(120)");
+
+                    b.Property<string>("OriginalValue")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<string>("Reason")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<DateTime?>("ReviewedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("RuleVersion")
+                        .HasMaxLength(120)
+                        .HasColumnType("nvarchar(120)");
+
+                    b.Property<string>("SubjectStableId")
+                        .IsRequired()
+                        .HasMaxLength(150)
+                        .HasColumnType("nvarchar(150)");
+
+                    b.Property<int>("SubjectType")
+                        .HasColumnType("int");
+
+                    b.Property<string>("UserNotes")
+                        .HasMaxLength(2000)
+                        .HasColumnType("nvarchar(2000)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("LearningStatus");
+
+                    b.HasIndex("SubjectType", "SubjectStableId");
+
+                    b.ToTable("UserCorrections");
+                });
+
             modelBuilder.Entity("IBSCardManager.Entities.WebSearchResult", b =>
                 {
                     b.Property<Guid>("WebSearchResultId")
@@ -1052,6 +1492,17 @@ namespace IBSCardManager.Migrations
                     b.Navigation("InventoryCard");
                 });
 
+            modelBuilder.Entity("IBSCardManager.Entities.KnowledgeEvidence", b =>
+                {
+                    b.HasOne("IBSCardManager.Entities.KnowledgeRecord", "KnowledgeRecord")
+                        .WithMany("Evidence")
+                        .HasForeignKey("KnowledgeRecordId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("KnowledgeRecord");
+                });
+
             modelBuilder.Entity("IBSCardManager.Entities.Product", b =>
                 {
                     b.HasOne("IBSCardManager.Entities.Brand", "Brand")
@@ -1095,6 +1546,11 @@ namespace IBSCardManager.Migrations
             modelBuilder.Entity("IBSCardManager.Entities.Brand", b =>
                 {
                     b.Navigation("Products");
+                });
+
+            modelBuilder.Entity("IBSCardManager.Entities.KnowledgeRecord", b =>
+                {
+                    b.Navigation("Evidence");
                 });
 
             modelBuilder.Entity("IBSCardManager.Entities.Product", b =>
