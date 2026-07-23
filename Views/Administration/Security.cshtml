@@ -1,16 +1,17 @@
 @model IBSCardManager.Models.AdministrationSecurityViewModel
 @{
-    ViewData["Title"] = "AI & Security";
+    ViewData["Title"] = "AI Providers & Connections";
+    var openAiConfigured = Model.OpenAiApiKeyMasked != "Not configured";
 }
 
 <div class="container-fluid py-3">
     <div class="d-flex flex-wrap justify-content-between align-items-start gap-3 mb-3">
         <div>
             <span class="text-uppercase small text-muted fw-semibold">Administration</span>
-            <h1 class="h3 mb-1">AI Providers &amp; Security</h1>
-            <p class="text-muted mb-0">Connect OpenAI securely, test the connection, and manage protected provider credentials.</p>
+            <h1 class="h3 mb-1">AI Providers &amp; Connections</h1>
+            <p class="text-muted mb-0">Expand only the provider you want to manage. Credentials remain protected and masked.</p>
         </div>
-        <a asp-action="Connections" class="btn btn-outline-primary">View all connections</a>
+        <a asp-action="Connections" class="btn btn-outline-primary"><i class="bi bi-diagram-3 me-1"></i>View all connections</a>
     </div>
 
     @if (TempData["SecurityMessage"] is string message)
@@ -25,101 +26,150 @@
     <div class="row g-3 mb-3">
         <div class="col-md-4">
             <div class="card h-100 p-3">
-                <span class="small text-muted">Encryption</span>
+                <span class="small text-muted"><i class="bi bi-shield-lock me-1"></i>Encryption</span>
                 <strong class="fs-5">@(Model.EncryptionAvailable ? "Enabled" : "Unavailable")</strong>
                 <small class="text-muted">Secrets are protected before storage.</small>
             </div>
         </div>
         <div class="col-md-4">
             <div class="card h-100 p-3">
-                <span class="small text-muted">Credential vault</span>
+                <span class="small text-muted"><i class="bi bi-key me-1"></i>Credential vault</span>
                 <strong class="fs-5">@Model.CredentialVaultStatus</strong>
                 <small class="text-muted">Raw secret values are never displayed.</small>
             </div>
         </div>
         <div class="col-md-4">
             <div class="card h-100 p-3">
-                <span class="small text-muted">OpenAI key</span>
-                <strong class="fs-5">@(Model.OpenAiApiKeyMasked == "Not configured" ? "Not connected" : "Configured")</strong>
-                <small class="text-muted">@Model.OpenAiApiKeyMasked</small>
+                <span class="small text-muted"><i class="bi bi-activity me-1"></i>OpenAI status</span>
+                <strong class="fs-5">@(Model.OpenAiEnabled ? "Connected" : openAiConfigured ? "Disconnected" : "Not configured")</strong>
+                <small class="text-muted">@(openAiConfigured ? Model.OpenAiApiKeyMasked : "Add an API key to begin")</small>
             </div>
         </div>
     </div>
 
-    <div class="row g-3">
-        <div class="col-xl-8">
-            <div class="card p-3 h-100">
-                <div class="d-flex justify-content-between align-items-start gap-3 mb-3">
-                    <div>
-                        <h2 class="h5 mb-1">OpenAI / ChatGPT connection</h2>
-                        <p class="small text-muted mb-0">Use an OpenAI API key. Your normal ChatGPT website password is not used by the application.</p>
-                    </div>
-                    <span class="badge @(Model.OpenAiApiKeyMasked == "Not configured" ? "text-bg-secondary" : "text-bg-success")">
-                        @(Model.OpenAiApiKeyMasked == "Not configured" ? "Setup required" : "Key configured")
+    <div class="accordion" id="providerConnectionsAccordion">
+        <div class="accordion-item mb-3 border rounded overflow-hidden">
+            <h2 class="accordion-header" id="openAiHeading">
+                <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#openAiPanel" aria-expanded="true" aria-controls="openAiPanel">
+                    <span class="provider-icon bg-success-subtle text-success me-3"><i class="bi bi-stars"></i></span>
+                    <span class="flex-grow-1">
+                        <strong class="d-block">OpenAI / ChatGPT</strong>
+                        <small class="text-muted">Card identification, OCR, vision analysis, and AI learning</small>
                     </span>
+                    <span class="badge me-3 @(Model.OpenAiEnabled ? "text-bg-success" : openAiConfigured ? "text-bg-warning" : "text-bg-secondary")">
+                        @(Model.OpenAiEnabled ? "Connected" : openAiConfigured ? "Disconnected" : "Setup required")
+                    </span>
+                </button>
+            </h2>
+            <div id="openAiPanel" class="accordion-collapse collapse show" aria-labelledby="openAiHeading" data-bs-parent="#providerConnectionsAccordion">
+                <div class="accordion-body">
+                    <div class="row g-2 mb-3 small">
+                        <div class="col-md-4"><div class="border rounded p-2 h-100"><span class="text-muted d-block">API key</span><strong>@Model.OpenAiApiKeyMasked</strong></div></div>
+                        <div class="col-md-4"><div class="border rounded p-2 h-100"><span class="text-muted d-block">Project ID</span><strong>@Model.OpenAiProjectId</strong></div></div>
+                        <div class="col-md-4"><div class="border rounded p-2 h-100"><span class="text-muted d-block">Organization ID</span><strong>@Model.OpenAiOrganizationId</strong></div></div>
+                    </div>
+
+                    <form asp-action="SaveOpenAiCredentials" method="post" class="row g-3">
+                        @Html.AntiForgeryToken()
+                        <div class="col-12">
+                            <label class="form-label" for="openAiApiKey">API key</label>
+                            <input id="openAiApiKey" class="form-control" name="ApiKey" type="password" autocomplete="new-password" placeholder="sk-proj-..." />
+                            <div class="form-text">Leave blank to keep the current protected key.</div>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label" for="openAiProjectId">Project ID <span class="text-muted">(optional)</span></label>
+                            <input id="openAiProjectId" class="form-control" name="ProjectId" placeholder="proj_..." />
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label" for="openAiOrganizationId">Organization ID <span class="text-muted">(optional)</span></label>
+                            <input id="openAiOrganizationId" class="form-control" name="OrganizationId" placeholder="org-..." />
+                        </div>
+                        <div class="col-12 d-flex flex-wrap gap-2">
+                            <button type="submit" class="btn btn-primary"><i class="bi bi-floppy me-1"></i>@(openAiConfigured ? "Edit & save" : "Add & save")</button>
+                        </div>
+                    </form>
+
+                    <hr />
+
+                    <div class="d-flex flex-wrap gap-2">
+                        <form asp-action="ConnectOpenAi" method="post">@Html.AntiForgeryToken()<button type="submit" class="btn btn-success" @(openAiConfigured ? null : "disabled")><i class="bi bi-plug me-1"></i>Connect</button></form>
+                        <form asp-action="TestOpenAiConnection" method="post">@Html.AntiForgeryToken()<button type="submit" class="btn btn-outline-success" @(openAiConfigured ? null : "disabled")><i class="bi bi-wifi me-1"></i>Test connection</button></form>
+                        <form asp-action="DisconnectOpenAi" method="post">@Html.AntiForgeryToken()<button type="submit" class="btn btn-outline-warning" @(Model.OpenAiEnabled ? null : "disabled")><i class="bi bi-pause-circle me-1"></i>Disconnect</button></form>
+                        <form asp-action="RemoveOpenAiCredentials" method="post" onsubmit="return confirm('Remove the OpenAI API key, project ID, and organization ID? This cannot be undone.');">@Html.AntiForgeryToken()<button type="submit" class="btn btn-outline-danger" @(openAiConfigured ? null : "disabled")><i class="bi bi-trash me-1"></i>Remove</button></form>
+                    </div>
                 </div>
-
-                <div class="row g-2 mb-3 small">
-                    <div class="col-md-4"><div class="border rounded p-2 h-100"><span class="text-muted d-block">API key</span><strong>@Model.OpenAiApiKeyMasked</strong></div></div>
-                    <div class="col-md-4"><div class="border rounded p-2 h-100"><span class="text-muted d-block">Project ID</span><strong>@Model.OpenAiProjectId</strong></div></div>
-                    <div class="col-md-4"><div class="border rounded p-2 h-100"><span class="text-muted d-block">Organization ID</span><strong>@Model.OpenAiOrganizationId</strong></div></div>
-                </div>
-
-                <form asp-action="SaveOpenAiCredentials" method="post" class="row g-3">
-                    @Html.AntiForgeryToken()
-                    <div class="col-12">
-                        <label class="form-label" for="openAiApiKey">API key</label>
-                        <input id="openAiApiKey" class="form-control" name="ApiKey" type="password" autocomplete="new-password" placeholder="sk-proj-..." />
-                        <div class="form-text">Leave blank to keep the currently stored key.</div>
-                    </div>
-                    <div class="col-md-6">
-                        <label class="form-label" for="openAiProjectId">Project ID <span class="text-muted">(optional)</span></label>
-                        <input id="openAiProjectId" class="form-control" name="ProjectId" placeholder="proj_..." />
-                    </div>
-                    <div class="col-md-6">
-                        <label class="form-label" for="openAiOrganizationId">Organization ID <span class="text-muted">(optional)</span></label>
-                        <input id="openAiOrganizationId" class="form-control" name="OrganizationId" placeholder="org-..." />
-                    </div>
-                    <div class="col-12 d-flex flex-wrap gap-2">
-                        <button type="submit" class="btn btn-primary">Save secure credentials</button>
-                    </div>
-                </form>
-
-                <hr />
-
-                <form asp-action="TestOpenAiConnection" method="post" class="d-flex flex-wrap align-items-center gap-2">
-                    @Html.AntiForgeryToken()
-                    <button type="submit" class="btn btn-outline-success">Test OpenAI connection</button>
-                    <small class="text-muted">Runs a live connection test using the same key the scanner will use.</small>
-                </form>
             </div>
         </div>
 
-        <div class="col-xl-4">
-            <div class="card p-3 mb-3">
-                <h2 class="h5">Recommended setup</h2>
-                <ol class="small ps-3 mb-0">
-                    <li class="mb-2">Create an OpenAI API key for this application.</li>
-                    <li class="mb-2">Paste it above and save the protected credential.</li>
-                    <li class="mb-2">Run <strong>Test OpenAI connection</strong>.</li>
-                    <li>Return to Scanner, accept a front/back pair, then click <strong>Analyze with ChatGPT</strong>.</li>
-                </ol>
+        <div class="accordion-item mb-3 border rounded overflow-hidden">
+            <h2 class="accordion-header" id="ebayHeading">
+                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#ebayPanel" aria-expanded="false" aria-controls="ebayPanel">
+                    <span class="provider-icon bg-primary-subtle text-primary me-3"><i class="bi bi-shop"></i></span>
+                    <span class="flex-grow-1">
+                        <strong class="d-block">eBay</strong>
+                        <small class="text-muted">Listings, inventory synchronization, orders, and business policies</small>
+                    </span>
+                    <span class="badge me-3 @(Model.EBayClientIdMasked == "Not configured" ? "text-bg-secondary" : "text-bg-info")">@(Model.EBayClientIdMasked == "Not configured" ? "Setup required" : "Credentials saved")</span>
+                </button>
+            </h2>
+            <div id="ebayPanel" class="accordion-collapse collapse" aria-labelledby="ebayHeading" data-bs-parent="#providerConnectionsAccordion">
+                <div class="accordion-body">
+                    <p class="small mb-1"><strong>Client ID:</strong> @Model.EBayClientIdMasked</p>
+                    <p class="small"><strong>Refresh token:</strong> @Model.EBayRefreshTokenMasked</p>
+                    <form asp-action="SaveEbayCredentials" method="post" class="row g-3">
+                        @Html.AntiForgeryToken()
+                        <div class="col-md-4"><label class="form-label">Client ID</label><input class="form-control" name="ClientId" /></div>
+                        <div class="col-md-4"><label class="form-label">Client secret</label><input class="form-control" name="ClientSecret" type="password" autocomplete="new-password" /></div>
+                        <div class="col-md-4"><label class="form-label">Refresh token</label><input class="form-control" name="RefreshToken" type="password" autocomplete="new-password" /></div>
+                        <div class="col-12"><button type="submit" class="btn btn-outline-primary"><i class="bi bi-floppy me-1"></i>Save eBay credentials</button></div>
+                    </form>
+                </div>
             </div>
+        </div>
 
-            <div class="card p-3">
-                <h2 class="h5">eBay credentials</h2>
-                <p class="small text-muted">Prepared for the marketplace listing workflow.</p>
-                <p class="small mb-1"><strong>Client ID:</strong> @Model.EBayClientIdMasked</p>
-                <p class="small"><strong>Refresh token:</strong> @Model.EBayRefreshTokenMasked</p>
-
-                <form asp-action="SaveEbayCredentials" method="post" class="mt-2">
-                    @Html.AntiForgeryToken()
-                    <div class="mb-2"><label class="form-label">Client ID</label><input class="form-control" name="ClientId" /></div>
-                    <div class="mb-2"><label class="form-label">Client secret</label><input class="form-control" name="ClientSecret" type="password" autocomplete="new-password" /></div>
-                    <div class="mb-2"><label class="form-label">Refresh token</label><input class="form-control" name="RefreshToken" type="password" autocomplete="new-password" /></div>
-                    <button type="submit" class="btn btn-outline-primary">Save eBay credentials</button>
-                </form>
+        <div class="accordion-item mb-3 border rounded overflow-hidden">
+            <h2 class="accordion-header" id="whatnotHeading">
+                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#whatnotPanel" aria-expanded="false" aria-controls="whatnotPanel">
+                    <span class="provider-icon bg-dark-subtle text-dark me-3"><i class="bi bi-broadcast"></i></span>
+                    <span class="flex-grow-1">
+                        <strong class="d-block">Whatnot</strong>
+                        <small class="text-muted">Inventory export and future live-selling connection</small>
+                    </span>
+                    <span class="badge text-bg-secondary me-3">Export only</span>
+                </button>
+            </h2>
+            <div id="whatnotPanel" class="accordion-collapse collapse" aria-labelledby="whatnotHeading" data-bs-parent="#providerConnectionsAccordion">
+                <div class="accordion-body">
+                    <div class="alert alert-light border mb-3">
+                        <strong>Whatnot connection is reserved for the marketplace phase.</strong>
+                        <div class="small text-muted">The current provider supports export preparation. Direct listing, live-stream, order, and sales synchronization will be added when supported connection credentials are available.</div>
+                    </div>
+                    <a asp-action="Connections" class="btn btn-outline-dark"><i class="bi bi-gear me-1"></i>Open provider manager</a>
+                </div>
             </div>
         </div>
     </div>
 </div>
+
+<style>
+    .provider-icon {
+        width: 42px;
+        height: 42px;
+        border-radius: 10px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.25rem;
+        flex: 0 0 42px;
+    }
+
+    .accordion-button::after {
+        margin-left: .75rem;
+    }
+
+    .accordion-button:not(.collapsed) {
+        background: var(--bs-body-bg);
+        color: inherit;
+        box-shadow: inset 0 -1px 0 rgba(0,0,0,.08);
+    }
+</style>
