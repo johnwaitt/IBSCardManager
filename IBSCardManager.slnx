@@ -1,0 +1,4 @@
+<Solution>
+  <Project Path="IBSCardManager.csproj" />
+  <Project Path="IBSCardManager.Tests/IBSCardManager.Tests.csproj" />
+</Solution>

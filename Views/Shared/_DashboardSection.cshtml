@@ -1,0 +1,62 @@
+@model IBSCardManager.Models.DashboardSectionViewModel
+
+@{
+    var iconClass = Model.Title.Contains("Import", StringComparison.OrdinalIgnoreCase) ? "bi bi-file-earmark-arrow-up" :
+        Model.Title.Contains("Scanner", StringComparison.OrdinalIgnoreCase) ? "bi bi-upc-scan" :
+        Model.Title.Contains("Wishlist", StringComparison.OrdinalIgnoreCase) ? "bi bi-star" :
+        Model.Title.Contains("Sets", StringComparison.OrdinalIgnoreCase) ? "bi bi-layers" :
+        Model.Title.Contains("Pricing", StringComparison.OrdinalIgnoreCase) ? "bi bi-cash-coin" :
+        Model.Title.Contains("Marketplace", StringComparison.OrdinalIgnoreCase) ? "bi bi-shop" :
+        Model.Title.Contains("Value", StringComparison.OrdinalIgnoreCase) ? "bi bi-cash-stack" :
+        "bi bi-grid-3x3-gap";
+}
+
+<section class="dashboard-section">
+    <div class="dashboard-section-header">
+        <div>
+            <h2><span class="section-icon-tile" aria-hidden="true"><i class="@iconClass"></i></span>@Model.Title</h2>
+            @if (!string.IsNullOrWhiteSpace(Model.Description))
+            {
+                <p>@Model.Description</p>
+            }
+        </div>
+        @if (!string.IsNullOrWhiteSpace(Model.ViewAllUrl))
+        {
+            <a href="@Model.ViewAllUrl" class="section-view-all"><i class="bi bi-arrow-right me-1" aria-hidden="true"></i>View all</a>
+        }
+    </div>
+
+    @if (Model.IsUnavailable)
+    {
+        <div class="unavailable-state">
+            <span class="empty-state-icon" aria-hidden="true"><i class="bi bi-dash-circle"></i></span>
+            <strong>Unavailable</strong>
+            <p>@Model.EmptyMessage</p>
+        </div>
+    }
+    else if (!string.IsNullOrWhiteSpace(Model.ErrorMessage))
+    {
+        <div class="error-state">
+            <span class="empty-state-icon" aria-hidden="true"><i class="bi bi-exclamation-octagon"></i></span>
+            <strong>Error</strong>
+            <p>@Model.ErrorMessage</p>
+        </div>
+    }
+    else if (Model.Items.Count == 0)
+    {
+        <div class="empty-state">
+            <span class="empty-state-icon" aria-hidden="true"><i class="bi bi-inbox"></i></span>
+            <strong>No cards found</strong>
+            <p>@Model.EmptyMessage</p>
+        </div>
+    }
+    else
+    {
+        <div class="dashboard-item-grid">
+            @foreach (var item in Model.Items)
+            {
+                <partial name="_CollectionItemCard" model="item" />
+            }
+        </div>
+    }
+</section>

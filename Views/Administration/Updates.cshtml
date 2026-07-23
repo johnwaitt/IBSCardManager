@@ -1,0 +1,18 @@
+@model IBSCardManager.Models.AdministrationUpdatesViewModel
+@{ ViewData["Title"] = "Updates"; }
+<div class="container py-4">
+    <h1>Updates</h1>
+    <p class="text-muted">Version tracking across application, schema, knowledge, prompts, rules, marketplace, and AI model.</p>
+
+    <div class="row g-3">
+        <div class="col-md-6"><div class="card p-3"><strong>Application Version</strong><div>@Model.ApplicationVersion</div></div></div>
+        <div class="col-md-6"><div class="card p-3"><strong>Build</strong><div>@Model.InformationalVersion</div></div></div>
+        <div class="col-md-6"><div class="card p-3"><strong>Database Version</strong><div>@(Model.DatabaseVersion ?? "Unavailable")</div></div></div>
+        <div class="col-md-6"><div class="card p-3"><strong>Catalog Version</strong><div>@(Model.CatalogVersion ?? "Unavailable")</div></div></div>
+        <div class="col-md-6"><div class="card p-3"><strong>Knowledge Version</strong><div>@(Model.KnowledgeVersion ?? "Unavailable")</div></div></div>
+        <div class="col-md-6"><div class="card p-3"><strong>Prompt Version</strong><div>@(Model.PromptVersion ?? "Unavailable")</div></div></div>
+        <div class="col-md-6"><div class="card p-3"><strong>Rule Version</strong><div>@(Model.RuleVersion ?? "Unavailable")</div></div></div>
+        <div class="col-md-6"><div class="card p-3"><strong>Marketplace Version</strong><div>@(Model.MarketplaceVersion ?? "Unavailable")</div></div></div>
+        <div class="col-md-6"><div class="card p-3"><strong>AI Model Version</strong><div>@(Model.AiModelVersion ?? "Unknown")</div></div></div>
+    </div>
+</div>

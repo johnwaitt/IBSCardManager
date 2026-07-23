@@ -1,0 +1,23 @@
+@model IBSCardManager.Models.AdministrationFeatureManagerViewModel
+@{ ViewData["Title"] = "Feature Manager"; }
+<div class="container py-4">
+    <h1>Feature Manager</h1>
+    <p class="text-muted">Feature flags and staged rollout controls.</p>
+
+    <div class="card p-3 mb-3">
+        <strong>Developer Mode</strong>
+        <div>@(Model.DeveloperModeEnabled ? "Enabled" : "Disabled")</div>
+    </div>
+
+    <div class="table-responsive">
+        <table class="table table-sm table-striped">
+            <thead><tr><th>Feature Flag</th><th>Enabled</th></tr></thead>
+            <tbody>
+            @foreach (var flag in Model.FeatureFlags)
+            {
+                <tr><td>@flag.Key</td><td>@(flag.Value ? "Yes" : "No")</td></tr>
+            }
+            </tbody>
+        </table>
+    </div>
+</div>

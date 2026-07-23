@@ -1,0 +1,144 @@
+@model IBSCardManager.Models.SetEditorViewModel
+@{
+    ViewData["Title"] = "Edit Set";
+}
+
+@section Styles {
+    <link rel="stylesheet" href="~/css/set-editor.css" asp-append-version="true" />
+}
+
+<div class="set-editor-page">
+    <header class="set-editor-header">
+        <div>
+            <span class="eyebrow">CATALOG + INVENTORY + EBAY DRAFT</span>
+            <h1>@Model.ProductName</h1>
+            <p>Edit checklist details, set the quantity you own, and prepare eBay-ready listing data.</p>
+        </div>
+        <div class="set-editor-actions">
+            <a asp-controller="Collection" asp-action="Index" class="btn btn-outline-secondary"><i class="bi bi-arrow-left me-1" aria-hidden="true"></i>Back to collection</a>
+            <button type="button" class="btn btn-outline-primary" id="expandAll"><i class="bi bi-arrows-expand me-1" aria-hidden="true"></i>Expand all</button>
+            <button type="submit" form="setEditorForm" class="btn btn-primary"><i class="bi bi-check2-circle me-1" aria-hidden="true"></i>Save all changes</button>
+        </div>
+    </header>
+
+    @if (TempData["Success"] is string message)
+    {
+        <div class="alert alert-success">@message</div>
+    }
+
+            <div class="set-editor-toolbar">
+        <label class="search-box"><i class="bi bi-search" aria-hidden="true"></i><input id="setSearch" type="search" placeholder="Search card #, player, team, parallel..." /></label>
+        <label><input type="checkbox" id="ownedOnly" /> <i class="bi bi-check-circle me-1" aria-hidden="true"></i>Owned only</label>
+        <label><input type="checkbox" id="missingOnly" /> <i class="bi bi-dash-circle me-1" aria-hidden="true"></i>Missing only</label>
+        <span><strong id="visibleRows">@Model.Rows.Count</strong> visible</span>
+    </div>
+
+    <form method="post" asp-action="EditSet" id="setEditorForm">
+        @Html.AntiForgeryToken()
+        <input asp-for="ProductId" type="hidden" />
+        <input asp-for="ProductName" type="hidden" />
+
+        <div class="set-editor-table-wrap">
+            <table class="table set-editor-table">
+                <thead>
+                    <tr>
+                        <th></th><th>Qty</th><th>Card #</th><th>Player / Subject</th><th>Team</th><th>Parallel / Variation</th><th>Flags</th><th>Price</th><th>Images & lookup</th>
+                    </tr>
+                </thead>
+                <tbody>
+                @for (var i = 0; i < Model.Rows.Count; i++)
+                {
+                    var row = Model.Rows[i];
+                    var exactQuery = $"{Model.ProductName} #{row.CardNumber} {row.Subject} {row.Team} {row.Parallel} {row.Variation}";
+                    var ebayUrl = $"https://www.ebay.com/sch/i.html?_nkw={Uri.EscapeDataString(exactQuery)}&LH_Sold=1&LH_Complete=1";
+                    var tcdbUrl = $"https://www.tcdb.com/Search.cfm?SearchCategory=Baseball&SearchMode=General&SearchString={Uri.EscapeDataString(exactQuery)}";
+                    var searchText = $"{row.CardNumber} {row.Subject} {row.Team} {row.Subset} {row.Parallel} {row.Variation}".ToLowerInvariant();
+                    <tr class="set-main-row" data-search="@searchText" data-qty="@row.Quantity">
+                        <td><button type="button" class="row-toggle" aria-label="Show eBay fields" title="Show eBay fields"><i class="bi bi-chevron-down" aria-hidden="true"></i></button></td>
+                        <td>
+                            <input asp-for="Rows[i].ChecklistItemId" type="hidden" />
+                            <input asp-for="Rows[i].Quantity" type="number" min="0" max="9999" class="form-control form-control-sm qty-field" />
+                        </td>
+                        <td><input asp-for="Rows[i].CardNumber" class="form-control form-control-sm compact-field" /></td>
+                        <td><input asp-for="Rows[i].Subject" class="form-control form-control-sm" /></td>
+                        <td><input asp-for="Rows[i].Team" class="form-control form-control-sm" /></td>
+                        <td>
+                            <input asp-for="Rows[i].Parallel" class="form-control form-control-sm" placeholder="Parallel" />
+                            <input asp-for="Rows[i].Variation" class="form-control form-control-sm mt-1" placeholder="Variation" />
+                        </td>
+                        <td class="flag-cell">
+                            <label><input asp-for="Rows[i].IsRookie" /> RC</label>
+                            <label><input asp-for="Rows[i].IsAutograph" /> Auto</label>
+                            <label><input asp-for="Rows[i].IsRelic" /> Relic</label>
+                            <label><input asp-for="Rows[i].IsRefractor" /> Refr.</label>
+                        </td>
+                        <td><input asp-for="Rows[i].ListingPrice" type="number" min="0" step="0.01" class="form-control form-control-sm price-field" placeholder="$" /></td>
+                        <td class="lookup-cell">
+                            @if (!string.IsNullOrWhiteSpace(row.StockImageUrl))
+                            {
+                                <img src="@row.StockImageUrl" alt="@row.Subject" class="set-editor-thumb" loading="lazy" />
+                            }
+                            <div class="lookup-links">
+                                <a href="@ebayUrl" target="_blank" rel="noopener">Exact eBay sold</a>
+                                <a href="@tcdbUrl" target="_blank" rel="noopener">Verify on TCDB</a>
+                            </div>
+                        </td>
+                    </tr>
+                    <tr class="set-detail-row" hidden>
+                        <td colspan="9">
+                            <div class="detail-grid">
+                                <section>
+                                    <h3>Catalog details</h3>
+                                    <div class="field-grid">
+                                        <label>Position<input asp-for="Rows[i].Position" class="form-control form-control-sm" /></label>
+                                        <label>Subset<input asp-for="Rows[i].Subset" class="form-control form-control-sm" /></label>
+                                        <label>Serial number<input asp-for="Rows[i].SerialNumber" class="form-control form-control-sm" /></label>
+                                        <label>Print run<input asp-for="Rows[i].PrintRun" class="form-control form-control-sm" /></label>
+                                        <label class="wide">Front stock image URL<input asp-for="Rows[i].StockImageUrl" class="form-control form-control-sm" /></label>
+                                        <label class="wide">Back stock image URL<input asp-for="Rows[i].StockBackImageUrl" class="form-control form-control-sm" /></label>
+                                    </div>
+                                </section>
+                                <section>
+                                    <h3>Grading</h3>
+                                    <div class="field-grid">
+                                        <label>Grader<input asp-for="Rows[i].GradeIssuer" class="form-control form-control-sm" placeholder="PSA, BGS, SGC..." /></label>
+                                        <label>Grade<input asp-for="Rows[i].Grade" class="form-control form-control-sm" /></label>
+                                        <label class="wide">Certification number<input asp-for="Rows[i].CertNumber" class="form-control form-control-sm" /></label>
+                                    </div>
+                                </section>
+                                <section class="ebay-section">
+                                    <h3>eBay listing draft</h3>
+                                    <div class="field-grid">
+                                        <label>SKU / custom label<input asp-for="Rows[i].EbaySku" class="form-control form-control-sm" /></label>
+                                        <label>Category ID<input asp-for="Rows[i].EbayCategoryId" class="form-control form-control-sm" placeholder="Trading-card category" /></label>
+                                        <label>Condition<input asp-for="Rows[i].EbayCondition" class="form-control form-control-sm" placeholder="Ungraded, Graded..." /></label>
+                                        <label>Format<select asp-for="Rows[i].ListingFormat" class="form-select form-select-sm"><option value="FixedPrice">Buy It Now</option><option value="Auction">Auction</option></select></label>
+                                        <label class="wide">Title<input asp-for="Rows[i].EbayTitle" class="form-control form-control-sm ebay-title" maxlength="80" /><small><span class="title-count">0</span>/80</small></label>
+                                        <label class="wide">Description<textarea asp-for="Rows[i].EbayDescription" class="form-control form-control-sm" rows="3"></textarea></label>
+                                        <label>Shipping policy<input asp-for="Rows[i].ShippingPolicyName" class="form-control form-control-sm" /></label>
+                                        <label>Return policy<input asp-for="Rows[i].ReturnPolicyName" class="form-control form-control-sm" /></label>
+                                        <label>Payment policy<input asp-for="Rows[i].PaymentPolicyName" class="form-control form-control-sm" /></label>
+                                        <label class="checkbox-label"><input asp-for="Rows[i].BestOfferEnabled" /> Best Offer</label>
+                                    </div>
+                                    <div class="package-grid">
+                                        <label>Weight oz<input asp-for="Rows[i].PackageWeightOz" type="number" step="0.01" class="form-control form-control-sm" /></label>
+                                        <label>Length in<input asp-for="Rows[i].PackageLengthIn" type="number" step="0.01" class="form-control form-control-sm" /></label>
+                                        <label>Width in<input asp-for="Rows[i].PackageWidthIn" type="number" step="0.01" class="form-control form-control-sm" /></label>
+                                        <label>Height in<input asp-for="Rows[i].PackageHeightIn" type="number" step="0.01" class="form-control form-control-sm" /></label>
+                                    </div>
+                                    <button type="button" class="btn btn-sm btn-outline-primary generate-title" data-year="@Model.ProductName" data-card="@row.CardNumber">Generate title</button>
+                                </section>
+                            </div>
+                        </td>
+                    </tr>
+                }
+                </tbody>
+            </table>
+        </div>
+        <div class="sticky-save"><span>Ctrl+S saves all changes.</span><button class="btn btn-primary btn-lg">Save all changes</button></div>
+    </form>
+</div>
+
+@section Scripts {
+    <script src="~/js/set-editor.js" asp-append-version="true"></script>
+}

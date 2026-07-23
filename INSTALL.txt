@@ -1,0 +1,11 @@
+CardManagerPro v0.5.0 - Scanner & AI Foundation
+
+1. Stop the application in Visual Studio (Shift+F5).
+2. Copy the Views and wwwroot folders into the project folder.
+3. Choose Replace files in the destination.
+4. Build > Clean Solution.
+5. Build > Rebuild Solution.
+6. Press F5.
+
+Release version v0.5.0 now appears in the upper-left sidebar beside the CardManagerPro logo.
+No database migration is required.

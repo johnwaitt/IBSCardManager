@@ -1,0 +1,42 @@
+IBS CARD MANAGER - MILESTONE 1 CLEAN BUILD
+==========================================
+
+This package is rebuilt from the project baseline and removes the duplicate nested
+Controllers and Models folders that caused the earlier compilation errors.
+
+Included:
+- Existing inventory and scanner preserved
+- Sets management (Products)
+- Checklist management
+- CSV checklist import
+- Checklist fields linked to inventory cards
+- Updated navigation
+- EF Core migration included
+
+INSTALL STEPS
+-------------
+1. Close the old IBSCardManager solution in Visual Studio.
+2. Extract this ZIP to a NEW folder. Do not copy it over the old folder.
+3. Open IBSCardManager.slnx.
+4. Wait for NuGet restore to finish.
+5. Select Build > Clean Solution.
+6. Select Build > Rebuild Solution.
+7. Confirm the Error List shows 0 errors.
+8. Select Tools > NuGet Package Manager > Package Manager Console.
+9. Confirm Default project is IBSCardManager.
+10. Run: Update-Database
+11. Press F5.
+12. Use Sets in the left menu, then open Checklists for a selected set.
+
+CSV CHECKLIST HEADERS
+---------------------
+Required:
+Card Number, Player
+
+Optional:
+Team, Subset, Rookie, Autograph, Relic, Refractor, Stock Image
+
+IMPORTANT
+---------
+Use this extracted folder as a separate clean copy. Do not merge it into the earlier
+folder, because that can recreate duplicate Controller and Model classes.

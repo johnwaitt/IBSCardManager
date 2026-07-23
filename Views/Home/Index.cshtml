@@ -1,0 +1,90 @@
+@model IBSCardManager.Models.DashboardViewModel
+@{
+    ViewData["Title"] = "Dashboard";
+    var gainClass = Model.Gain >= 0 ? "positive" : "negative";
+    var gainPrefix = Model.Gain >= 0 ? "+" : string.Empty;
+}
+
+@section Styles {
+    <link rel="stylesheet" href="~/css/dashboard.css" asp-append-version="true" />
+}
+
+<div class="dashboard-page">
+    <section class="dashboard-hero">
+        <div>
+            <span class="eyebrow">HOME DASHBOARD</span>
+            <h1>Welcome back</h1>
+            <p>Browse your collection, check completion, and jump straight into the most common workflows.</p>
+            <div class="dashboard-status-line">
+                <span class="status-badge status-connected"><i class="bi bi-database-check" aria-hidden="true"></i> Database: <strong>@Model.DatabaseStatus</strong></span>
+                <span class="status-badge status-muted"><i class="bi bi-activity" aria-hidden="true"></i> Background: <strong>@Model.BackgroundTaskStatus</strong></span>
+                <span class="status-badge status-muted"><i class="bi bi-clock-history" aria-hidden="true"></i> Last refreshed: <strong>@Model.LastRefreshed.ToLocalTime().ToString("g")</strong></span>
+                <span class="status-badge status-muted"><i class="bi bi-hdd-network" aria-hidden="true"></i> Runtime: <strong>@Model.RuntimeDatabase</strong></span>
+            </div>
+        </div>
+        <div class="dashboard-hero-actions">
+            <a href="/Cards/Create" class="primary-icon-button"><span class="btn-icon"><i class="bi bi-plus-circle" aria-hidden="true"></i></span><span>Add Card</span></a>
+            <a href="/Checklists/Import" class="secondary-icon-button"><span class="btn-icon"><i class="bi bi-file-earmark-arrow-up" aria-hidden="true"></i></span><span>Import Checklist</span></a>
+            <a href="/Scanner" class="secondary-icon-button"><span class="btn-icon"><i class="bi bi-upc-scan" aria-hidden="true"></i></span><span>Scan Cards</span></a>
+            <a href="/Collection" class="secondary-icon-button"><span class="btn-icon"><i class="bi bi-grid-1x2" aria-hidden="true"></i></span><span>Open My Collection</span></a>
+            <a href="/CollectionExplorer" class="secondary-icon-button"><span class="btn-icon"><i class="bi bi-compass" aria-hidden="true"></i></span><span>Open Collection Explorer</span></a>
+            <a href="/CollectionExplorer?mode=unmatchedcards" class="secondary-icon-button"><span class="btn-icon"><i class="bi bi-link-45deg" aria-hidden="true"></i></span><span>Open Unmatched Cards</span></a>
+            <a href="/CollectionExplorer?mode=wishlist" class="secondary-icon-button"><span class="btn-icon"><i class="bi bi-star" aria-hidden="true"></i></span><span>View Wishlist</span></a>
+            <a href="/Search" class="secondary-icon-button"><span class="btn-icon"><i class="bi bi-shop" aria-hidden="true"></i></span><span>View Marketplace</span></a>
+            <a href="/" class="secondary-icon-button"><span class="btn-icon"><i class="bi bi-arrow-clockwise refresh-icon" aria-hidden="true"></i></span><span>Refresh Dashboard</span></a>
+        </div>
+    </section>
+
+    <section class="dashboard-metrics">
+        @foreach (var metric in Model.Metrics)
+        {
+            <article class="metric-card @metric.CssClass @(metric.IsUnavailable ? "metric-unavailable" : string.Empty)">
+                <div class="metric-top">
+                    <span>@metric.Title</span>
+                    @if (!string.IsNullOrWhiteSpace(metric.IconClass))
+                    {
+                        <span class="dashboard-icon-tile" aria-hidden="true"><i class="bi @metric.IconClass"></i></span>
+                    }
+                </div>
+                <strong>@metric.Value</strong>
+                @if (!string.IsNullOrWhiteSpace(metric.Subtext))
+                {
+                    <small>@metric.Subtext</small>
+                }
+            </article>
+        }
+    </section>
+
+    <section class="dashboard-summary-strip">
+        <div><strong>@Model.TotalCards.ToString("N0")</strong><span>physical cards</span></div>
+        <div><strong>@Model.TotalRecords.ToString("N0")</strong><span>unique records</span></div>
+        <div><strong class="@gainClass">@gainPrefix@Model.Gain.ToString("C0")</strong><span>gain vs cost</span></div>
+        <div><strong class="@gainClass">@gainPrefix@Model.ReturnPercent.ToString("N1")%</strong><span>return</span></div>
+    </section>
+
+    <section class="dashboard-sections">
+        @foreach (var section in Model.Sections)
+        {
+            <partial name="_DashboardSection" model="section" />
+        }
+    </section>
+
+    <section class="dashboard-actions-panel">
+        <div class="dashboard-section-header">
+            <div>
+                <h2><span class="section-icon-tile" aria-hidden="true"><i class="bi bi-lightning-charge"></i></span>Quick Actions</h2>
+                <p>Common entry points for collection work.</p>
+            </div>
+        </div>
+        <div class="quick-actions-grid">
+            @foreach (var action in Model.QuickActions)
+            {
+                <a href="@action.Url" class="quick-action-card secondary-icon-button">
+                    <span class="quick-action-icon dashboard-icon-tile" aria-hidden="true"><i class="bi @action.IconClass"></i></span>
+                    <strong>@action.Title</strong>
+                    <small>@action.Description</small>
+                </a>
+            }
+        </div>
+    </section>
+</div>

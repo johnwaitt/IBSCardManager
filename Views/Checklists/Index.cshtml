@@ -1,0 +1,106 @@
+@model IBSCardManager.Models.ChecklistGridViewModel
+@{ ViewData["Title"] = "Checklists"; }
+<div class="page-heading"><div><h1><i class="bi bi-card-checklist icon-accent me-2" aria-hidden="true"></i>Checklists</h1><p>Search, import and maintain card checklists.</p></div><div><form asp-action="Load2025ToppsChromeBlackBase" method="post" class="d-inline">@Html.AntiForgeryToken()<button class="btn btn-warning"><i class="bi bi-magic me-1" aria-hidden="true"></i>Load 2025 Topps Chrome Black</button></form> @if (Model.ProductId.HasValue) { <a asp-action="AddSetToCollection" asp-route-productId="@Model.ProductId" class="btn btn-success"><i class="bi bi-folder-plus me-1" aria-hidden="true"></i>Add Set to Collection</a> } <a asp-action="Import" asp-route-productId="@Model.ProductId" class="btn btn-outline-primary"><i class="bi bi-file-earmark-arrow-up me-1" aria-hidden="true"></i>Import CSV</a> <a asp-action="Create" asp-route-productId="@Model.ProductId" class="btn btn-primary"><i class="bi bi-plus-circle me-1" aria-hidden="true"></i>Add Checklist Card</a> <a asp-action="FindChecklistOnline" asp-route-productId="@Model.ProductId" class="btn btn-outline-dark"><i class="bi bi-globe me-1" aria-hidden="true"></i>Find Checklist Online</a></div></div>
+@if (TempData["Success"] is string ok) { <div class="alert alert-success">@ok</div> }
+<form method="get" class="module-filter"><select name="productId" asp-items="ViewBag.Products" onchange="this.form.requestSubmit ? this.form.requestSubmit() : this.form.submit()"><option value="">Select a set</option></select><input name="search" value="@Model.Search" placeholder="Player, team, section, parallel or card number..."/><button class="btn btn-dark">Search</button></form>
+
+@if (!string.IsNullOrWhiteSpace(Model.ErrorMessage))
+{
+    <div class="alert alert-danger">@Model.ErrorMessage</div>
+}
+else if (!Model.ProductId.HasValue)
+{
+    <div class="module-card"><div class="alert alert-info mb-0">Select a set to view its checklist.</div></div>
+}
+else
+{
+    <div class="module-card mb-3">
+        <div class="d-flex flex-wrap justify-content-between gap-3">
+            <div>
+                <strong>Checklist status:</strong> <span class="badge text-bg-secondary">@Model.ChecklistStatusLabel</span>
+                @if (!string.IsNullOrWhiteSpace(Model.LastImportSource))
+                {
+                    <div class="small text-muted mt-1">Last import source: @Model.LastImportSource</div>
+                }
+            </div>
+            <div class="small text-muted d-flex flex-wrap gap-3">
+                <span>Total checklist cards: <strong>@Model.TotalCount</strong></span>
+                <span>Visible rows: <strong>@Model.FilteredCount</strong></span>
+                <span>Cards with players: <strong>@Model.CardsWithPlayers</strong></span>
+                <span>Cards with teams: <strong>@Model.CardsWithTeams</strong></span>
+                <span>Cards with reference images: <strong>@Model.CardsWithReferenceImages</strong></span>
+                <span>Checklist sections: <strong>@Model.ChecklistSectionCount</strong></span>
+            </div>
+        </div>
+    </div>
+
+    @if (!Model.Rows.Any())
+    {
+        <div class="module-card">
+            <div class="alert alert-warning mb-0">
+                This set exists, but its checklist has not been loaded.
+                <div class="mt-3 d-flex flex-wrap gap-2">
+                    <a asp-action="Import" asp-route-productId="@Model.ProductId" class="btn btn-primary btn-sm">Import CSV</a>
+                    <a asp-action="PasteChecklist" asp-route-productId="@Model.ProductId" class="btn btn-outline-primary btn-sm">Paste Checklist</a>
+                    <a asp-action="FindChecklistOnline" asp-route-productId="@Model.ProductId" class="btn btn-outline-dark btn-sm">Find Checklist Online</a>
+                    <a asp-action="Create" asp-route-productId="@Model.ProductId" class="btn btn-outline-primary btn-sm">Add Checklist Card</a>
+                    <a asp-action="Index" class="btn btn-outline-secondary btn-sm">Return to Sets</a>
+                </div>
+            </div>
+        </div>
+    }
+    else
+    {
+        <div class="module-card table-responsive">
+            <table class="table align-middle table-hover">
+                <thead>
+                    <tr>
+                        <th>Reference</th>
+                        <th>Set</th>
+                        <th>Checklist Section</th>
+                        <th>Card #</th>
+                        <th>Player</th>
+                        <th>Team</th>
+                        <th>Type</th>
+                        <th>Parallel</th>
+                        <th>Variation</th>
+                        <th>Rookie</th>
+                        <th>Autograph</th>
+                        <th>Relic</th>
+                        <th>Serial Maximum</th>
+                        <th>Owned Quantity</th>
+                        <th>Source status</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                @foreach (var item in Model.Rows)
+                {
+                    <tr>
+                        <td>@if (!string.IsNullOrWhiteSpace(item.ReferenceImageUrl)) { <a href="@item.ReferenceImageUrl" target="_blank" rel="noopener">Open</a> } else { <span class="text-muted">No image</span> }</td>
+                        <td>@item.ProductDisplayName</td>
+                        <td>@item.ChecklistSection</td>
+                        <td><strong>@item.CardNumber</strong></td>
+                        <td>@item.Player</td>
+                        <td>@item.Team</td>
+                        <td>@item.CardType</td>
+                        <td>@item.Parallel</td>
+                        <td>@item.Variation</td>
+                        <td>@(item.IsRookie ? "Yes" : "")</td>
+                        <td>@(item.IsAutograph ? "Yes" : "")</td>
+                        <td>@(item.IsRelic ? "Yes" : "")</td>
+                        <td>@item.SerialMaximum</td>
+                        <td>@item.OwnedQuantity</td>
+                        <td>@Model.ChecklistStatusLabel</td>
+                        <td class="text-end">
+                            <a asp-controller="Cards" asp-action="Create" asp-route-productId="@item.ProductId" asp-route-checklistItemId="@item.ChecklistItemId" class="btn btn-sm btn-outline-primary">View</a>
+                            <a asp-action="Edit" asp-route-id="@item.ChecklistItemId" class="btn btn-sm btn-outline-secondary">Edit</a>
+                            <a asp-action="AddSetToCollection" asp-route-productId="@item.ProductId" class="btn btn-sm btn-outline-success">Add to Collection</a>
+                        </td>
+                    </tr>
+                }
+                </tbody>
+            </table>
+        </div>
+    }
+}

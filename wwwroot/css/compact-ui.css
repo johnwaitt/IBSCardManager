@@ -1,0 +1,145 @@
+/* Global compact mode to reduce vertical scrolling across views */
+html,
+body {
+    font-size: 14px;
+}
+
+.sidebar {
+    width: 248px;
+    padding: 14px 12px;
+}
+
+.main-content {
+    margin-left: 248px;
+}
+
+.sidebar-brand {
+    padding: 2px 4px 12px;
+    margin-bottom: 8px;
+}
+
+.sidebar-nav .nav-link {
+    min-height: 36px;
+    padding: 7px 10px;
+    font-size: 13px;
+}
+
+.nav-section-label {
+    margin: 10px 9px 4px;
+}
+
+.topbar {
+    height: 58px;
+    padding: 0 18px;
+}
+
+.topbar-title {
+    font-size: 16px;
+}
+
+.topbar-primary {
+    padding: 6px 11px;
+    font-size: 13px;
+}
+
+.content-area {
+    padding: 14px 16px 18px;
+}
+
+.container.py-4,
+.container-fluid.py-4 {
+    padding-top: 0.75rem !important;
+    padding-bottom: 0.75rem !important;
+}
+
+h1 {
+    margin-bottom: 0.5rem;
+}
+
+.card,
+.metric-card,
+.dashboard-section,
+.explorer-summary-strip div,
+.dashboard-summary-strip div {
+    border-radius: 10px;
+}
+
+.card,
+.metric-card,
+.dashboard-section {
+    padding: 0.7rem !important;
+}
+
+.table td,
+.table th {
+    padding: 0.35rem 0.45rem;
+}
+
+.btn,
+.btn-primary,
+.btn-secondary,
+.btn-outline-primary,
+.btn-outline-secondary,
+.primary-icon-button,
+.secondary-icon-button {
+    min-height: 32px;
+    padding: 0.35rem 0.55rem;
+    font-size: 0.9rem;
+}
+
+/* Scanner-specific compacting */
+.scan-workspace {
+    gap: 0.65rem;
+}
+
+.scan-panel {
+    padding: 0.7rem;
+}
+
+.scan-panel-title {
+    margin-bottom: 0.5rem;
+}
+
+.scan-layout-actions {
+    position: sticky;
+    bottom: 0;
+    z-index: 5;
+    padding-top: 0.35rem;
+    background: var(--surface, #fff);
+}
+
+.scan-layout-status {
+    padding: 0.45rem 0.6rem;
+    margin-top: 0.4rem;
+}
+
+.scan-search-box,
+.scan-analysis-panel,
+.scan-save-panel {
+    margin-bottom: 0.55rem;
+}
+
+.scan-identify-panel {
+    position: sticky;
+    top: 66px;
+}
+
+@media (max-width: 900px) {
+    .main-content {
+        margin-left: 0;
+    }
+
+    .topbar {
+        height: 52px;
+        padding: 0 12px;
+    }
+
+    .content-area {
+        padding: 10px 10px 16px;
+    }
+
+    .scan-identify-panel {
+        position: static;
+        top: auto;
+    }
+}

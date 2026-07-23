@@ -1,0 +1,55 @@
+@model IBSCardManager.Models.AdministrationDashboardViewModel
+@{
+    ViewData["Title"] = "Administration";
+}
+
+<div class="container py-4">
+    <h1>Administration Center</h1>
+    @if (TempData["DeveloperModeMessage"] is string developerModeMessage)
+    {
+        <div class="alert alert-warning">@developerModeMessage</div>
+    }
+    <p class="text-muted">Centralized operational workspace for platform configuration and provider governance.</p>
+
+    <div class="row g-3 mb-4">
+        @foreach (var card in Model.Cards)
+        {
+            var border = card.Severity switch
+            {
+                "Success" => "border-success",
+                "Warning" => "border-warning",
+                "Danger" => "border-danger",
+                _ => "border-secondary"
+            };
+            <div class="col-md-6 col-xl-4">
+                <div class="card p-3 @border">
+                    <strong>@card.Title</strong>
+                    <div class="mt-1">@card.Status</div>
+                    <div class="small text-muted">@card.Detail</div>
+                    @if (!string.IsNullOrWhiteSpace(card.LastEventLabel))
+                    {
+                        <div class="small mt-2"><strong>@card.LastEventLabel:</strong> @card.LastEventValue</div>
+                    }
+                </div>
+            </div>
+        }
+    </div>
+
+    <div class="row g-3">
+        <div class="col-md-6 col-xl-4"><a class="card p-3 text-decoration-none" asp-action="Connections"><strong>Connections</strong><div class="text-muted">Provider manager and external services.</div></a></div>
+        <div class="col-md-6 col-xl-4"><a class="card p-3 text-decoration-none" asp-action="MasterDatabase"><strong>Master Database</strong><div class="text-muted">Catalog health, import/export, validation.</div></a></div>
+        <div class="col-md-6 col-xl-4"><a class="card p-3 text-decoration-none" asp-action="Security"><strong>Security</strong><div class="text-muted">Credential vault and encryption status.</div></a></div>
+        <div class="col-md-6 col-xl-4"><a class="card p-3 text-decoration-none" asp-action="BackgroundJobs"><strong>Background Jobs</strong><div class="text-muted">Queue monitor and execution status.</div></a></div>
+        <div class="col-md-6 col-xl-4"><a class="card p-3 text-decoration-none" asp-action="Updates"><strong>Updates</strong><div class="text-muted">Application, schema, catalog, AI model versions.</div></a></div>
+        <div class="col-md-6 col-xl-4"><a class="card p-3 text-decoration-none" asp-action="FeatureManager"><strong>Feature Manager</strong><div class="text-muted">Feature flags and rollout controls.</div></a></div>
+        <div class="col-md-6 col-xl-4"><a class="card p-3 text-decoration-none" asp-action="Developer"><strong>Developer</strong><div class="text-muted">Developer mode tools and test utilities.</div></a></div>
+        <div class="col-md-6 col-xl-4"><a class="card p-3 text-decoration-none" asp-action="SystemSettings"><strong>System Settings</strong><div class="text-muted">Global application settings.</div></a></div>
+        <div class="col-md-6 col-xl-4"><a class="card p-3 text-decoration-none" asp-action="AuditHistory"><strong>Audit History</strong><div class="text-muted">Configuration and provider change tracking.</div></a></div>
+    </div>
+
+    <div class="mt-4 small text-muted">
+        <div><strong>Application Version:</strong> @Model.ApplicationVersion</div>
+        <div><strong>Build:</strong> @Model.InformationalVersion</div>
+        <div><strong>Generated:</strong> @Model.GeneratedAt.ToLocalTime().ToString("g")</div>
+    </div>
+</div>

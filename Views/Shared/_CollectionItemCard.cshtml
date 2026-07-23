@@ -1,0 +1,52 @@
+@model IBSCardManager.Models.CollectionItemViewModel
+
+@{
+    var image = string.IsNullOrWhiteSpace(Model.ImageUrl) ? "/images/placeholder-card.svg" : Model.ImageUrl;
+    var link = string.IsNullOrWhiteSpace(Model.LinkUrl) ? "#" : Model.LinkUrl;
+}
+
+<a href="@link" class="collection-item-card @(Model.IsUnavailable ? "collection-item-unavailable" : string.Empty)" title="Open @Model.Title">
+    <div class="collection-item-image">
+        <img src="@image" alt="@Model.Title" loading="lazy" onerror="this.src='/images/placeholder-card.svg';" />
+        <span class="collection-item-open" aria-hidden="true"><i class="bi bi-arrow-up-right-circle"></i></span>
+    </div>
+    <div class="collection-item-body">
+        <div class="collection-item-heading">
+            <strong>@Model.Title</strong>
+            @if (!string.IsNullOrWhiteSpace(Model.Badge))
+            {
+                <span class="badge text-bg-primary"><i class="bi bi-tag me-1" aria-hidden="true"></i>@Model.Badge</span>
+            }
+        </div>
+        @if (!string.IsNullOrWhiteSpace(Model.Subtitle))
+        {
+            <div class="collection-item-subtitle">@Model.Subtitle</div>
+        }
+        <div class="collection-item-meta">
+            @if (!string.IsNullOrWhiteSpace(Model.Meta))
+            {
+                <span><i class="bi bi-info-circle me-1" aria-hidden="true"></i>@Model.Meta</span>
+            }
+            @if (!string.IsNullOrWhiteSpace(Model.Meta2))
+            {
+                <span><i class="bi bi-three-dots me-1" aria-hidden="true"></i>@Model.Meta2</span>
+            }
+            @if (!string.IsNullOrWhiteSpace(Model.QuantityText))
+            {
+                <span><i class="bi bi-stack me-1" aria-hidden="true"></i>@Model.QuantityText</span>
+            }
+            @if (!string.IsNullOrWhiteSpace(Model.ValueText))
+            {
+                <span><i class="bi bi-cash-coin me-1" aria-hidden="true"></i>@Model.ValueText</span>
+            }
+        </div>
+        @if (!string.IsNullOrWhiteSpace(Model.StatusText))
+        {
+            <div class="collection-item-status"><i class="bi bi-check2-circle me-1" aria-hidden="true"></i>@Model.StatusText</div>
+        }
+        @if (Model.ProgressPercent.HasValue)
+        {
+            <div class="collection-item-progress"><span style="width:@Model.ProgressPercent%"></span></div>
+        }
+    </div>
+</a>

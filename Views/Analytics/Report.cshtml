@@ -1,0 +1,23 @@
+@model IReadOnlyList<IBSCardManager.Models.AnalyticsCardScoreViewModel>
+@{
+    var code = ViewData["ReportCode"]?.ToString() ?? "mostvaluable";
+    ViewData["Title"] = "Top Value Reports";
+}
+
+<div class="container py-4">
+    <h1>Top Value Reports</h1>
+
+    <div class="mb-3 d-flex gap-2 flex-wrap">
+        <a class="btn btn-outline-secondary" href="/Analytics/Report?code=mostvaluable">Most valuable</a>
+        <a class="btn btn-outline-secondary" href="/Analytics/Report?code=highestgains">Highest gains</a>
+        <a class="btn btn-outline-secondary" href="/Analytics/Report?code=largestlosses">Largest losses</a>
+        <a class="btn btn-outline-secondary" href="/Analytics/Report?code=highestroi">Highest ROI</a>
+        <a class="btn btn-outline-secondary" href="/Analytics/Report?code=lowestroi">Lowest ROI</a>
+        <a class="btn btn-outline-secondary" href="/Analytics/Report?code=graded">Most valuable graded</a>
+        <a class="btn btn-outline-secondary" href="/Analytics/Report?code=raw">Most valuable raw</a>
+        <a class="btn btn-outline-primary" href="/Analytics/Export?kind=@code&format=csv">Export CSV</a>
+        <a class="btn btn-outline-primary" href="/Analytics/Export?kind=@code&format=json">Export JSON</a>
+    </div>
+
+    <partial name="_RecommendationTable" model="Model" />
+</div>

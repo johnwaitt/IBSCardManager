@@ -1,0 +1,18 @@
+@{ ViewData["Title"] = "Import Checklist"; }
+<div class="page-heading"><div><h1><i class="bi bi-file-earmark-arrow-up icon-accent me-2" aria-hidden="true"></i>Import Official Checklist</h1><p>Load CSV or Excel checklists into the local reference catalog so the scanner and card searcher can identify cards offline.</p></div></div>
+<div class="module-card"><form method="post" enctype="multipart/form-data"><div asp-validation-summary="All" class="text-danger"></div>
+<div class="mb-3"><label class="form-label">Destination set</label><select name="productId" asp-items="ViewBag.Products" class="form-select" required><option value="">Select set</option></select></div>
+<div class="row g-3">
+<div class="col-md-6"><label class="form-label">Source name</label><input name="sourceName" class="form-control" value="User Import" /></div>
+<div class="col-md-6"><label class="form-label">Source type</label><select name="sourceType" class="form-select"><option>UserUpload</option><option>Paste</option><option>LocalDatabase</option><option>PublicApi</option><option>UserAssistedWebResearch</option><option>ManualEntry</option></select></div>
+<div class="col-md-6"><label class="form-label">Source URL</label><input name="sourceUrl" class="form-control" placeholder="https://..." /></div>
+<div class="col-md-6"><label class="form-label">Source product identifier</label><input name="sourceProductIdentifier" class="form-control" /></div>
+<div class="col-md-6"><label class="form-label">Source version</label><input name="sourceVersion" class="form-control" /></div>
+<div class="col-md-6"><label class="form-label">Verification status</label><select name="verificationStatus" class="form-select"><option>Unverified</option><option>NeedsReview</option><option>Verified</option></select></div>
+<div class="col-12"><label class="form-label">License / usage notes</label><input name="sourceLicenseUsageNotes" class="form-control" placeholder="Do not mark as manufacturer-official unless confirmed." /></div>
+<div class="col-12"><label class="form-label">Import profile</label><input name="importProfile" class="form-control" placeholder="CSV standard, XLSX mapped, JSON mapped, etc." /></div>
+</div>
+<div class="mb-3 mt-3"><label class="form-label">Checklist file</label><input type="file" name="checklistFile" accept=".csv,.xlsx,.xlsm,text/csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,.json" class="form-control" required/><div class="form-text">Supports CSV, XLSX, XLSM, and JSON (JSON mapping foundation). The first worksheet is imported for Excel.</div></div>
+<div class="mb-3"><label class="form-label">Optional stock image files</label><input type="file" name="stockImages" accept=".jpg,.jpeg,.png,.webp" class="form-control" multiple/><div class="form-text">Name each image using the card number, such as 125.jpg. Images are matched automatically.</div></div>
+<div class="csv-help"><strong><i class="bi bi-list-check me-1" aria-hidden="true"></i>Required columns</strong><p>Card Number and Player or Subject.</p><strong><i class="bi bi-gear me-1" aria-hidden="true"></i>Optional columns</strong><p>Team, Subset, Insert, Variation, Rookie, Autograph, Relic, Refractor, Stock Image URL, Reference Image URL, Reference Page URL, Source Record ID, Notes.</p><p class="mb-0">Import requires user review and mapping. No web source is auto-imported without user action.</p></div>
+<button class="btn btn-primary"><i class="bi bi-cloud-upload me-1" aria-hidden="true"></i>Import into catalog</button> <a asp-action="Index" class="btn btn-outline-secondary"><i class="bi bi-arrow-left me-1" aria-hidden="true"></i>Cancel</a></form></div>

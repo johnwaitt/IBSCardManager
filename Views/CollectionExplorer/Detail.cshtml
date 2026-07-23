@@ -1,0 +1,53 @@
+@model IBSCardManager.Models.CollectionExplorerDetailViewModel
+@{
+    ViewData["Title"] = Model.Title;
+}
+
+@section Styles {
+    <link rel="stylesheet" href="~/css/collection-explorer.css" asp-append-version="true" />
+}
+
+<div class="explorer-page">
+    <header class="explorer-hero">
+        <div>
+            <span class="eyebrow">DETAIL VIEW</span>
+            <h1>@Model.Title</h1>
+            @if (!string.IsNullOrWhiteSpace(Model.Subtitle))
+            {
+                <p>@Model.Subtitle</p>
+            }
+        </div>
+        <a href="@Model.BackUrl" class="btn btn-outline-secondary">Back</a>
+    </header>
+
+    <section class="dashboard-summary-strip">
+        @foreach (var metric in Model.SummaryMetrics)
+        {
+            <div><strong>@metric.Value</strong><span>@metric.Title</span></div>
+        }
+    </section>
+
+    @if (Model.IsUnavailable)
+    {
+        <div class="explorer-empty-state">
+            <strong>Unavailable</strong>
+            <p>@Model.EmptyMessage</p>
+        </div>
+    }
+    else if (Model.Items.Count == 0)
+    {
+        <div class="explorer-empty-state">
+            <strong>No cards found</strong>
+            <p>@Model.EmptyMessage</p>
+        </div>
+    }
+    else
+    {
+        <div class="explorer-card-grid">
+            @foreach (var item in Model.Items)
+            {
+                <partial name="_CollectionItemCard" model="item" />
+            }
+        </div>
+    }
+</div>

@@ -1,0 +1,16 @@
+CardManager Pro v1.0.0 - Catalog Search Foundation
+
+Added:
+- Universal Card Search workspace.
+- Ranked local search across inventory and imported catalog checklists.
+- Advanced player, team, year, set, and card-number filters.
+- Inventory quantity and catalog status in search results.
+- Provider-safe online lookup links for eBay, eBay Sold, 130 Point, TCDB, and Beckett.
+- CSV, XLSX, and XLSM checklist import.
+- Optional stock-image matching by card number.
+- Card Search navigation entry.
+
+Important:
+- Online lookup opens provider websites; this release does not scrape or copy licensed provider data.
+- ClosedXML NuGet package was added for Excel import.
+- No database migration is required.

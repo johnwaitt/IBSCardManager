@@ -1,0 +1,46 @@
+@model IBSCardManager.Models.BackupManifest
+@{
+    ViewData["Title"] = "Backup Manifest";
+}
+
+<div class="container py-4">
+    <h1>Backup Manifest</h1>
+    <p class="text-muted">Generated: @Model.GeneratedAt.ToLocalTime().ToString("g")</p>
+    <p><strong>Application Version:</strong> @Model.ApplicationVersion</p>
+
+    <div class="table-responsive">
+        <table class="table table-sm table-striped">
+            <thead>
+                <tr>
+                    <th>Database Name</th>
+                    <th>Database Role</th>
+                    <th>File Path</th>
+                    <th>Schema Version</th>
+                    <th>Catalog Version</th>
+                    <th>Knowledge Schema</th>
+                    <th>Backup Date</th>
+                    <th>File Size</th>
+                    <th>Checksum (SHA-256)</th>
+                    <th>Verification</th>
+                </tr>
+            </thead>
+            <tbody>
+            @foreach (var db in Model.Databases)
+            {
+                <tr>
+                    <td>@db.DatabaseName</td>
+                    <td>@db.DatabaseRole</td>
+                    <td>@db.FilePath</td>
+                    <td>@(db.SchemaVersion ?? "Unavailable")</td>
+                    <td>@(db.CatalogVersion ?? "Unavailable")</td>
+                    <td>@(db.KnowledgeSchemaVersion ?? "n/a")</td>
+                    <td>@(db.BackupDate == DateTimeOffset.MinValue ? "Unavailable" : db.BackupDate.ToLocalTime().ToString("g"))</td>
+                    <td>@db.FileSizeBytes.ToString("N0") bytes</td>
+                    <td>@(db.ChecksumSha256 ?? "Unavailable")</td>
+                    <td>@(db.VerificationResult ? "Verified" : "Not verified")</td>
+                </tr>
+            }
+            </tbody>
+        </table>
+    </div>
+</div>

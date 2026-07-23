@@ -1,0 +1,55 @@
+@model IBSCardManager.Models.RecommendationCenterViewModel
+@{
+    ViewData["Title"] = "Smart Recommendations";
+}
+
+<div class="container py-4">
+    <h1>Smart Recommendations</h1>
+    <p class="text-muted">Last calculated: @Model.LastCalculatedAt.ToLocalTime().ToString("g")</p>
+
+    <h2>Grade These</h2>
+    <partial name="_RecommendationTable" model="Model.GradeThese" />
+
+    <h2 class="mt-4">Sell These</h2>
+    <partial name="_RecommendationTable" model="Model.SellThese" />
+
+    <h2 class="mt-4">Hold These</h2>
+    <partial name="_RecommendationTable" model="Model.HoldThese" />
+
+    <h2 class="mt-4">Fix These Records</h2>
+    <div class="table-responsive">
+        <table class="table table-sm table-striped">
+            <thead><tr><th>Card</th><th>Score</th><th>Class</th><th>Missing Data</th></tr></thead>
+            <tbody>
+            @foreach (var issue in Model.FixTheseRecords)
+            {
+                <tr>
+                    <td>@issue.CardIdentity</td>
+                    <td>@issue.Score.ToString("N1")</td>
+                    <td>@issue.Classification</td>
+                    <td>@string.Join(", ", issue.MissingFields)</td>
+                </tr>
+            }
+            </tbody>
+        </table>
+    </div>
+
+    <h2 class="mt-4">List These Duplicates</h2>
+    <div class="table-responsive">
+        <table class="table table-sm table-striped">
+            <thead><tr><th>Group</th><th>Copies</th><th>Raw</th><th>Graded</th><th>Recommendation</th></tr></thead>
+            <tbody>
+            @foreach (var duplicate in Model.ListTheseDuplicates)
+            {
+                <tr>
+                    <td>@duplicate.GroupKey</td>
+                    <td>@duplicate.Copies</td>
+                    <td>@duplicate.RawCopies</td>
+                    <td>@duplicate.GradedCopies</td>
+                    <td>@duplicate.Recommendation</td>
+                </tr>
+            }
+            </tbody>
+        </table>
+    </div>
+</div>

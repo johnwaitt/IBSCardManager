@@ -1,0 +1,1203 @@
+@model IBSCardManager.Entities.Card
+
+@{
+    var formAction = ViewData["FormAction"]?.ToString() ?? "Create";
+    var submitText = ViewData["SubmitText"]?.ToString() ?? "Save Card";
+
+    var teams = new[]
+    {
+        "Arizona Diamondbacks",
+        "Atlanta Braves",
+        "Baltimore Orioles",
+        "Boston Red Sox",
+        "Chicago Cubs",
+        "Chicago White Sox",
+        "Cincinnati Reds",
+        "Cleveland Guardians",
+        "Colorado Rockies",
+        "Detroit Tigers",
+        "Houston Astros",
+        "Kansas City Royals",
+        "Los Angeles Angels",
+        "Los Angeles Dodgers",
+        "Miami Marlins",
+        "Milwaukee Brewers",
+        "Minnesota Twins",
+        "New York Mets",
+        "New York Yankees",
+        "Oakland Athletics",
+        "Philadelphia Phillies",
+        "Pittsburgh Pirates",
+        "San Diego Padres",
+        "San Francisco Giants",
+        "Seattle Mariners",
+        "St. Louis Cardinals",
+        "Tampa Bay Rays",
+        "Texas Rangers",
+        "Toronto Blue Jays",
+        "Washington Nationals",
+        "No Team",
+        "Other"
+    };
+
+    var sports = new[]
+    {
+        "Baseball",
+        "Basketball",
+        "Football",
+        "Hockey",
+        "Soccer",
+        "Golf",
+        "Racing",
+        "Wrestling",
+        "Multi-Sport",
+        "Other"
+    };
+
+    var gradingCompanies = new[]
+    {
+        "Raw / Ungraded",
+        "PSA",
+        "BGS",
+        "Beckett",
+        "SGC",
+        "CGC",
+        "CSG",
+        "TAG",
+        "HGA",
+        "ISA",
+        "GMA",
+        "Other"
+    };
+
+    var grades = new[]
+    {
+        "10",
+        "9.5",
+        "9",
+        "8.5",
+        "8",
+        "7.5",
+        "7",
+        "6.5",
+        "6",
+        "5.5",
+        "5",
+        "4",
+        "3",
+        "2",
+        "1",
+        "Authentic",
+        "Altered",
+        "No Grade"
+    };
+
+    var listingStatuses = new[]
+    {
+        "Not Listed",
+        "Draft",
+        "Ready to List",
+        "Active",
+        "Sold",
+        "Ended",
+        "Archived"
+    };
+}
+
+<style>
+    .card-form-page {
+        width: 100%;
+        padding-bottom: 40px;
+    }
+
+    .card-form-header {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 18px;
+        margin-bottom: 18px;
+    }
+
+        .card-form-header h1 {
+            margin: 0;
+            font-size: 30px;
+            font-weight: 700;
+        }
+
+        .card-form-header p {
+            margin: 5px 0 0;
+            color: #68737d;
+        }
+
+    .card-form-layout {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) 330px;
+        gap: 20px;
+        align-items: start;
+    }
+
+    .form-panel {
+        margin-bottom: 18px;
+        background: #ffffff;
+        border: 1px solid #d8dee4;
+        border-radius: 10px;
+        overflow: hidden;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+    }
+
+    .form-panel-header {
+        padding: 12px 16px;
+        background: #243746;
+        color: #ffffff;
+        font-size: 16px;
+        font-weight: 700;
+    }
+
+    .form-panel-body {
+        padding: 16px;
+    }
+
+    .card-field-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 15px;
+    }
+
+        .card-field-grid.three-columns {
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+        }
+
+    .card-field {
+        min-width: 0;
+    }
+
+        .card-field.full-width {
+            grid-column: 1 / -1;
+        }
+
+        .card-field label {
+            display: block;
+            margin-bottom: 5px;
+            color: #34414c;
+            font-size: 13px;
+            font-weight: 700;
+        }
+
+    .card-form-control {
+        width: 100%;
+        min-height: 42px;
+        padding: 8px 11px;
+        border: 1px solid #bdc7cf;
+        border-radius: 7px;
+        background: #ffffff;
+        color: #202830;
+        font-size: 14px;
+    }
+
+    textarea.card-form-control {
+        min-height: 110px;
+        resize: vertical;
+    }
+
+    .card-form-control:focus {
+        border-color: #5b9bd5;
+        outline: 2px solid rgba(91, 155, 213, 0.18);
+    }
+
+    .lookup-control {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) 46px;
+        gap: 6px;
+    }
+
+    .lookup-button {
+        min-height: 42px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border: 1px solid #9baeba;
+        border-radius: 7px;
+        background: #edf3f8;
+        color: #243746;
+        cursor: pointer;
+    }
+
+        .lookup-button:hover {
+            border-color: #5b9bd5;
+            background: #dceeff;
+        }
+
+        .lookup-button svg {
+            width: 23px;
+            height: 23px;
+            fill: currentColor;
+        }
+
+    .checkbox-grid {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 12px;
+    }
+
+    .checkbox-option {
+        min-width: 135px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 10px 12px;
+        border: 1px solid #d1d8de;
+        border-radius: 7px;
+        background: #f7f8f9;
+        cursor: pointer;
+    }
+
+        .checkbox-option input {
+            width: 18px;
+            height: 18px;
+        }
+
+    .image-preview-panel {
+        position: sticky;
+        top: 18px;
+    }
+
+    .image-preview-section {
+        margin-bottom: 16px;
+    }
+
+        .image-preview-section:last-child {
+            margin-bottom: 0;
+        }
+
+    .image-preview-label {
+        display: block;
+        margin-bottom: 6px;
+        font-size: 13px;
+        font-weight: 700;
+    }
+
+    .image-preview-frame {
+        min-height: 210px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 9px;
+        border: 1px solid #ccd4db;
+        border-radius: 8px;
+        background: #f3f5f7;
+    }
+
+        .image-preview-frame img {
+            width: 100%;
+            max-height: 300px;
+            object-fit: contain;
+            border-radius: 5px;
+        }
+
+    .image-preview-placeholder {
+        color: #7a858e;
+        text-align: center;
+    }
+
+    .scanner-link {
+        width: 100%;
+        min-height: 42px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 7px;
+        margin-top: 14px;
+        padding: 8px 12px;
+        border: 1px solid #78a7c6;
+        border-radius: 7px;
+        background: #eaf6ff;
+        color: #205978;
+        text-decoration: none;
+        font-weight: 700;
+    }
+
+        .scanner-link:hover {
+            background: #d9efff;
+            color: #205978;
+            text-decoration: none;
+        }
+
+    .form-actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 9px;
+        padding: 15px;
+        background: #f5f7f8;
+        border-top: 1px solid #d8dee4;
+    }
+
+    .form-action-button {
+        min-height: 42px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        padding: 8px 18px;
+        border: 1px solid #aeb8c1;
+        border-radius: 7px;
+        background: #ffffff;
+        color: #263641;
+        text-decoration: none;
+        font-size: 14px;
+        font-weight: 700;
+        cursor: pointer;
+    }
+
+        .form-action-button.primary {
+            border-color: #1769d2;
+            background: #1769d2;
+            color: #ffffff;
+        }
+
+            .form-action-button.primary:hover {
+                background: #1059b4;
+            }
+
+    .validation-summary-errors {
+        margin-bottom: 15px;
+        padding: 12px;
+        border: 1px solid #df8b8b;
+        border-radius: 7px;
+        background: #fff0f0;
+        color: #8d2020;
+    }
+
+    .field-validation-error {
+        display: block;
+        margin-top: 4px;
+        color: #b12727;
+        font-size: 12px;
+    }
+
+    @@media (max-width: 1050px) {
+        .card-form-layout {
+            grid-template-columns: 1fr;
+        }
+
+        .image-preview-panel {
+            position: static;
+        }
+    }
+
+    @@media (max-width: 700px) {
+        .card-field-grid,
+        .card-field-grid.three-columns {
+            grid-template-columns: 1fr;
+        }
+
+        .card-form-header {
+            flex-direction: column;
+        }
+    }
+</style>
+
+<div class="card-form-page">
+
+    <div class="card-form-header">
+        <div>
+            <h1>@ViewData["Title"]</h1>
+            <p>Enter card information, grading, pricing, images and storage location.</p>
+        </div>
+    </div>
+
+    <form asp-action="@formAction"
+          method="post">
+
+        @if (formAction == "Edit")
+        {
+            <input type="hidden"
+                   asp-for="CardId" />
+        }
+
+        <div asp-validation-summary="ModelOnly"></div>
+
+        <div class="card-form-layout">
+
+            <main>
+
+                <section class="form-panel">
+
+                    <div class="form-panel-header">
+                        Card Identification
+                    </div>
+
+                    <div class="form-panel-body">
+
+                        <div class="card-field-grid">
+
+                            <div class="card-field">
+<label asp-for="ImageSourcePreference">Primary image</label>
+<select asp-for="ImageSourcePreference" class="card-form-control"><option value="Scan">Accepted scan</option><option value="Stock">Stock image</option></select>
+</div>
+<div class="card-field full-width">
+
+                                <label asp-for="Subject">
+                                    Player Name
+                                </label>
+
+                                <div class="lookup-control">
+
+                                    <input asp-for="Subject"
+                                           class="card-form-control"
+                                           id="playerNameInput"
+                                           placeholder="Player or subject name" />
+
+                                    <button type="button"
+                                            class="lookup-button"
+                                            id="playerLookupButton"
+                                            title="Lookup player"
+                                            aria-label="Lookup player">
+
+                                        <svg viewBox="0 0 64 64"
+                                             aria-hidden="true">
+                                            <path d="M18 14h8l3 7h6l3-7h8l8 14v19a5 5 0 0 1-5 5H37a5 5 0 0 1-5-5v-8h-1v8a5 5 0 0 1-5 5H15a5 5 0 0 1-5-5V28l8-14zm-2 18v15h10V32H16zm22 0v15h10V32H38zM26 26H15l-2 4h13v-4zm23 0H38v4h13l-2-4z" />
+                                        </svg>
+
+                                    </button>
+
+                                </div>
+
+                                <span asp-validation-for="Subject"></span>
+
+                            </div>
+
+                            <div class="card-field">
+
+                                <label asp-for="Team">
+                                    Team
+                                </label>
+
+                                <div class="lookup-control">
+
+                                    <select asp-for="Team"
+                                            class="card-form-control"
+                                            id="teamSelect">
+
+                                        <option value="">
+                                            Select Team
+                                        </option>
+
+                                        @foreach (var team in teams)
+                                        {
+                                            <option value="@team">
+                                                @team
+                                            </option>
+                                        }
+
+                                    </select>
+
+                                    <button type="button"
+                                            class="lookup-button"
+                                            id="teamLookupButton"
+                                            title="Lookup team"
+                                            aria-label="Lookup team">
+
+                                        <svg viewBox="0 0 64 64"
+                                             aria-hidden="true">
+                                            <path d="M18 14h8l3 7h6l3-7h8l8 14v19a5 5 0 0 1-5 5H37a5 5 0 0 1-5-5v-8h-1v8a5 5 0 0 1-5 5H15a5 5 0 0 1-5-5V28l8-14zm-2 18v15h10V32H16zm22 0v15h10V32H38zM26 26H15l-2 4h13v-4zm23 0H38v4h13l-2-4z" />
+                                        </svg>
+
+                                    </button>
+
+                                </div>
+
+                                <span asp-validation-for="Team"></span>
+
+                            </div>
+
+                            <div class="card-field">
+
+                                <label asp-for="Category">
+                                    Sport
+                                </label>
+
+                                <select asp-for="Category"
+                                        class="card-form-control">
+
+                                    <option value="">
+                                        Select Sport
+                                    </option>
+
+                                    @foreach (var sport in sports)
+                                    {
+                                        <option value="@sport">
+                                            @sport
+                                        </option>
+                                    }
+
+                                </select>
+
+                            </div>
+
+                            <div class="card-field">
+
+                                <label asp-for="Year">
+                                    Year
+                                </label>
+
+                                <input asp-for="Year"
+                                       class="card-form-control"
+                                       min="1800"
+                                       max="2100"
+                                       placeholder="2025" />
+
+                                <span asp-validation-for="Year"></span>
+
+                            </div>
+
+                            <div class="card-field full-width">
+                                <label asp-for="ProductId">Set / Product</label>
+                                <select asp-for="ProductId" asp-items="ViewBag.ProductOptions" class="card-form-control">
+                                    <option value="">Select a set</option>
+                                </select>
+                                <input asp-for="Set" type="hidden" />
+                                <input asp-for="ChecklistItemId" type="hidden" />
+                                <small class="text-muted">Select a set, enter the card number, then choose Lookup.</small>
+                            </div>
+
+                            <div class="card-field">
+
+                                <label asp-for="CardNumber">
+                                    Card Number
+                                </label>
+
+                                <div class="lookup-control">
+                                    <input asp-for="CardNumber" class="card-form-control" placeholder="BCP-123" />
+                                    <button type="button" id="checklistLookup" class="lookup-button" title="Look up checklist">⌕</button>
+                                </div>
+                                <small id="checklistLookupStatus" class="text-muted"></small>
+
+                            </div>
+
+                            <div class="card-field">
+
+                                <label asp-for="Variety">
+                                    Parallel / Variation
+                                </label>
+
+                                <input asp-for="Variety"
+                                       class="card-form-control"
+                                       placeholder="Gold Refractor" />
+
+                            </div>
+
+                            <div class="card-field">
+
+                                <label asp-for="SerialNumber">
+                                    Serial Number
+                                </label>
+
+                                <input asp-for="SerialNumber"
+                                       class="card-form-control"
+                                       placeholder="12" />
+
+                            </div>
+
+                            <div class="card-field">
+
+                                <label asp-for="PrintRun">
+                                    Print Run
+                                </label>
+
+                                <input asp-for="PrintRun"
+                                       class="card-form-control"
+                                       placeholder="50" />
+
+                            </div>
+
+                            <div class="card-field">
+
+                                <label asp-for="Serial">
+                                    Legacy Numbering
+                                </label>
+
+                                <input asp-for="Serial"
+                                       class="card-form-control"
+                                       placeholder="12/50" />
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                </section>
+
+                <section class="form-panel">
+
+                    <div class="form-panel-header">
+                        Card Features
+                    </div>
+
+                    <div class="form-panel-body">
+
+                        <div class="checkbox-grid">
+
+                            <label class="checkbox-option">
+                                <input asp-for="IsRookie" />
+                                <span>Rookie Card</span>
+                            </label>
+
+                            <label class="checkbox-option">
+                                <input asp-for="IsAutograph" />
+                                <span>Autograph</span>
+                            </label>
+
+                            <label class="checkbox-option">
+                                <input asp-for="IsRelic" />
+                                <span>Relic / Patch</span>
+                            </label>
+
+                            <label class="checkbox-option">
+                                <input asp-for="IsRefractor" />
+                                <span>Refractor</span>
+                            </label>
+
+                        </div>
+
+                    </div>
+
+                </section>
+
+                <section class="form-panel">
+
+                    <div class="form-panel-header">
+                        Grading
+                    </div>
+
+                    <div class="form-panel-body">
+
+                        <div class="card-field-grid">
+
+                            <div class="card-field">
+
+                                <label asp-for="GradeIssuer">
+                                    Grading Company
+                                </label>
+
+                                <select asp-for="GradeIssuer"
+                                        class="card-form-control">
+
+                                    <option value="">
+                                        Select Grading Company
+                                    </option>
+
+                                    @foreach (var company in gradingCompanies)
+                                    {
+                                        <option value="@company">
+                                            @company
+                                        </option>
+                                    }
+
+                                </select>
+
+                            </div>
+
+                            <div class="card-field">
+
+                                <label asp-for="Grade">
+                                    Grade
+                                </label>
+
+                                <select asp-for="Grade"
+                                        class="card-form-control">
+
+                                    <option value="">
+                                        Select Grade
+                                    </option>
+
+                                    @foreach (var grade in grades)
+                                    {
+                                        <option value="@grade">
+                                            @grade
+                                        </option>
+                                    }
+
+                                </select>
+
+                            </div>
+
+                            <div class="card-field">
+
+                                <label asp-for="AutographGrade">
+                                    Autograph Grade
+                                </label>
+
+                                <select asp-for="AutographGrade"
+                                        class="card-form-control">
+
+                                    <option value="">
+                                        Select Autograph Grade
+                                    </option>
+
+                                    @foreach (var grade in grades)
+                                    {
+                                        <option value="@grade">
+                                            @grade
+                                        </option>
+                                    }
+
+                                </select>
+
+                            </div>
+
+                            <div class="card-field">
+
+                                <label asp-for="CertNumber">
+                                    Certification Number
+                                </label>
+
+                                <input asp-for="CertNumber"
+                                       class="card-form-control"
+                                       placeholder="PSA or grading certificate number" />
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                </section>
+
+                <section class="form-panel">
+
+                    <div class="form-panel-header">
+                        Inventory and Pricing
+                    </div>
+
+                    <div class="form-panel-body">
+
+                        <div class="card-field-grid three-columns">
+
+                            <div class="card-field">
+
+                                <label asp-for="Quantity">
+                                    Quantity
+                                </label>
+
+                                <input asp-for="Quantity"
+                                       class="card-form-control"
+                                       min="0" />
+
+                            </div>
+
+                            <div class="card-field">
+
+                                <label asp-for="MyCost">
+                                    Purchase Price
+                                </label>
+
+                                <input asp-for="MyCost"
+                                       class="card-form-control"
+                                       step="0.01" />
+
+                            </div>
+
+                            <div class="card-field">
+
+                                <label asp-for="MyValue">
+                                    Collection Value
+                                </label>
+
+                                <input asp-for="MyValue"
+                                       class="card-form-control"
+                                       step="0.01" />
+
+                            </div>
+
+                            <div class="card-field">
+
+                                <label asp-for="PsaEstimate">
+                                    PSA Estimate
+                                </label>
+
+                                <input asp-for="PsaEstimate"
+                                       class="card-form-control"
+                                       step="0.01" />
+
+                            </div>
+
+                            <div class="card-field">
+
+                                <label asp-for="ListingPrice">
+                                    Listing Price
+                                </label>
+
+                                <input asp-for="ListingPrice"
+                                       class="card-form-control"
+                                       step="0.01" />
+
+                            </div>
+
+                            <div class="card-field">
+
+                                <label asp-for="ListingStatus">
+                                    Listing Status
+                                </label>
+
+                                <select asp-for="ListingStatus"
+                                        class="card-form-control">
+
+                                    @foreach (var status in listingStatuses)
+                                    {
+                                        <option value="@status">
+                                            @status
+                                        </option>
+                                    }
+
+                                </select>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                </section>
+
+                <section class="form-panel">
+
+                    <div class="form-panel-header">
+                        Images
+                    </div>
+
+                    <div class="form-panel-body">
+
+                        <div class="card-field-grid">
+
+                            <div class="card-field">
+
+                                <label asp-for="FrontImagePath">
+                                    Front Image Path
+                                </label>
+
+                                <input asp-for="FrontImagePath"
+                                       class="card-form-control"
+                                       id="frontImagePath"
+                                       placeholder="/uploads/cards/card-front.jpg" />
+
+                            </div>
+
+                            <div class="card-field">
+
+                                <label asp-for="BackImagePath">
+                                    Back Image Path
+                                </label>
+
+                                <input asp-for="BackImagePath"
+                                       class="card-form-control"
+                                       id="backImagePath"
+                                       placeholder="/uploads/cards/card-back.jpg" />
+
+                            </div>
+
+                        </div>
+
+                        <a asp-controller="Scanner"
+                           asp-action="Index"
+                           class="scanner-link">
+                            📷 Open Scanner Import
+                        </a>
+
+                    </div>
+
+                </section>
+
+                <section class="form-panel">
+
+                    <div class="form-panel-header">
+                        Storage
+                    </div>
+
+                    <div class="form-panel-body">
+
+                        <div class="card-field-grid three-columns">
+
+                            <div class="card-field">
+
+                                <label asp-for="StorageBox">
+                                    Storage Box
+                                </label>
+
+                                <input asp-for="StorageBox"
+                                       class="card-form-control"
+                                       placeholder="Box 1" />
+
+                            </div>
+
+                            <div class="card-field">
+
+                                <label asp-for="StorageRow">
+                                    Storage Row
+                                </label>
+
+                                <input asp-for="StorageRow"
+                                       class="card-form-control"
+                                       placeholder="Row A" />
+
+                            </div>
+
+                            <div class="card-field">
+
+                                <label asp-for="StorageBin">
+                                    Storage Bin
+                                </label>
+
+                                <input asp-for="StorageBin"
+                                       class="card-form-control"
+                                       placeholder="Bin 3" />
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                </section>
+
+                <section class="form-panel">
+
+                    <div class="form-panel-header">
+                        Notes
+                    </div>
+
+                    <div class="form-panel-body">
+
+                        <div class="card-field">
+
+                            <label asp-for="MyNotes">
+                                Notes
+                            </label>
+
+                            <textarea asp-for="MyNotes"
+                                      class="card-form-control"
+                                      placeholder="Card condition, purchase information or other notes"></textarea>
+
+                        </div>
+
+                    </div>
+
+                    <div class="form-actions">
+
+                        <button type="submit"
+                                class="form-action-button primary">
+                            💾 @submitText
+                        </button>
+
+                        <a asp-action="Index"
+                           class="form-action-button">
+                            Cancel
+                        </a>
+
+                    </div>
+
+                </section>
+
+            </main>
+
+            <aside class="image-preview-panel">
+
+                <section class="form-panel">
+
+                    <div class="form-panel-header">
+                        Image Preview
+                    </div>
+
+                    <div class="form-panel-body">
+
+                        <div class="image-preview-section">
+
+                            <span class="image-preview-label">
+                                Front
+                            </span>
+
+                            <div class="image-preview-frame"
+                                 id="frontPreviewFrame">
+
+                                <div class="image-preview-placeholder"
+                                     id="frontPreviewPlaceholder">
+                                    No front image selected
+                                </div>
+
+                                <img id="frontPreviewImage"
+                                     alt="Front card preview"
+                                     style="display:none;" />
+
+                            </div>
+
+                        </div>
+
+                        <div class="image-preview-section">
+
+                            <span class="image-preview-label">
+                                Back
+                            </span>
+
+                            <div class="image-preview-frame"
+                                 id="backPreviewFrame">
+
+                                <div class="image-preview-placeholder"
+                                     id="backPreviewPlaceholder">
+                                    No back image selected
+                                </div>
+
+                                <img id="backPreviewImage"
+                                     alt="Back card preview"
+                                     style="display:none;" />
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                </section>
+
+            </aside>
+
+        </div>
+
+    </form>
+
+</div>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+
+
+        const lookupButton = document.getElementById("checklistLookup");
+        lookupButton?.addEventListener("click", async function () {
+            const productId = document.getElementById("ProductId")?.value;
+            const cardNumber = document.getElementById("CardNumber")?.value?.trim();
+            const status = document.getElementById("checklistLookupStatus");
+            if (!productId || !cardNumber) { if (status) status.textContent = "Select a set and enter a card number."; return; }
+            if (status) status.textContent = "Searching checklist...";
+            try {
+                const response = await fetch(`/Cards/ChecklistLookup?productId=${encodeURIComponent(productId)}&cardNumber=${encodeURIComponent(cardNumber)}`);
+                if (!response.ok) { if (status) status.textContent = "No checklist match found."; return; }
+                const item = await response.json();
+                document.getElementById("ChecklistItemId").value = item.checklistItemId;
+                document.getElementById("Subject").value = item.subject || "";
+                document.getElementById("Team").value = item.team || "";
+                document.getElementById("Variety").value = item.subset || "";
+                document.getElementById("IsRookie").checked = !!item.isRookie;
+                document.getElementById("IsAutograph").checked = !!item.isAutograph;
+                document.getElementById("IsRelic").checked = !!item.isRelic;
+                const refractor = document.getElementById("IsRefractor"); if (refractor) refractor.checked = !!item.isRefractor;
+                if (status) status.textContent = `Matched: ${item.subject}`;
+            } catch { if (status) status.textContent = "Checklist lookup failed."; }
+        });
+
+        const frontPath =
+            document.getElementById("frontImagePath");
+
+        const backPath =
+            document.getElementById("backImagePath");
+
+        function updatePreview(pathInput, imageId, placeholderId) {
+
+            const image =
+                document.getElementById(imageId);
+
+            const placeholder =
+                document.getElementById(placeholderId);
+
+            if (!image || !placeholder) {
+                return;
+            }
+
+            const value =
+                pathInput?.value?.trim() || "";
+
+            if (!value) {
+                image.style.display = "none";
+                image.removeAttribute("src");
+                placeholder.style.display = "block";
+                return;
+            }
+
+            image.src = value;
+            image.style.display = "block";
+            placeholder.style.display = "none";
+
+            image.onerror = function() {
+                image.style.display = "none";
+                placeholder.style.display = "block";
+                placeholder.textContent =
+                    "Image could not be loaded";
+            };
+        }
+
+        frontPath?.addEventListener("input", function() {
+            updatePreview(
+                frontPath,
+                "frontPreviewImage",
+                "frontPreviewPlaceholder"
+            );
+        });
+
+        backPath?.addEventListener("input", function() {
+            updatePreview(
+                backPath,
+                "backPreviewImage",
+                "backPreviewPlaceholder"
+            );
+        });
+
+        document.getElementById("playerLookupButton")
+            ?.addEventListener("click", function() {
+
+                const player =
+                    document.getElementById("playerNameInput")
+                        ?.value?.trim();
+
+                if (!player) {
+                    document.getElementById("playerNameInput")
+                        ?.focus();
+
+                    return;
+                }
+
+                alert(
+                    "Player lookup will be connected for: " +
+                    player
+                );
+            });
+
+        document.getElementById("teamLookupButton")
+            ?.addEventListener("click", function() {
+
+                const team =
+                    document.getElementById("teamSelect")
+                        ?.value;
+
+                if (!team) {
+                    document.getElementById("teamSelect")
+                        ?.focus();
+
+                    return;
+                }
+
+                alert(
+                    "Team lookup will be connected for: " +
+                    team
+                );
+            });
+
+        updatePreview(
+            frontPath,
+            "frontPreviewImage",
+            "frontPreviewPlaceholder"
+        );
+
+        updatePreview(
+            backPath,
+            "backPreviewImage",
+            "backPreviewPlaceholder"
+        );
+    });
+</script>

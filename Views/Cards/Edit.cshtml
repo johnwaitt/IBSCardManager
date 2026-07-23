@@ -1,0 +1,17 @@
+@model IBSCardManager.Entities.Card
+
+@{
+    ViewData["Title"] = "Edit Card";
+    ViewData["FormAction"] = "Edit";
+    ViewData["SubmitText"] = "Save Changes";
+}
+
+<partial name="_CardForm"
+         model="Model"
+         view-data="ViewData" />
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+}

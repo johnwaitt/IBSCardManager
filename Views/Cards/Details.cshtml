@@ -1,0 +1,123 @@
+@model IBSCardManager.Entities.Card
+@{
+    ViewData["Title"] = "Card Workspace";
+    string ImagePath(string? path)
+    {
+        if (string.IsNullOrWhiteSpace(path)) return string.Empty;
+        var clean = path.Trim().Replace("\\", "/");
+        if (clean.StartsWith("http://", StringComparison.OrdinalIgnoreCase) || clean.StartsWith("https://", StringComparison.OrdinalIgnoreCase)) return clean;
+        if (clean.StartsWith("~/")) return Url.Content(clean);
+        if (clean.StartsWith("/")) return Url.Content("~" + clean);
+        return Url.Content("~/" + clean.TrimStart('/'));
+    }
+    var front = ImagePath(Model.FrontImagePath);
+    if (string.IsNullOrWhiteSpace(front)) front = ImagePath(Model.StockImageUrl);
+    var back = ImagePath(Model.BackImagePath);
+    var title = string.IsNullOrWhiteSpace(Model.Subject) ? "Unnamed Card" : Model.Subject;
+    var gain = (Model.MyValue ?? 0m) - (Model.MyCost ?? 0m);
+    var gainClass = gain >= 0 ? "positive" : "negative";
+    var status = string.IsNullOrWhiteSpace(Model.ListingStatus) ? "In Collection" : Model.ListingStatus;
+    var gradeText = string.IsNullOrWhiteSpace(Model.GradeIssuer) ? "Raw / Ungraded" : $"{Model.GradeIssuer} {Model.Grade}";
+}
+
+<div class="card-workspace" data-card-id="@Model.CardId">
+    <header class="workspace-header">
+        <div>
+            <div class="workspace-kicker"><span>Card Workspace</span><span class="workspace-version">v0.4.0</span></div>
+            <h1>@title</h1>
+            <p>@Model.Year @Model.Set @(!string.IsNullOrWhiteSpace(Model.CardNumber) ? "#" + Model.CardNumber : "")</p>
+        </div>
+        <div class="workspace-actions">
+            <a asp-action="Index" class="workspace-btn secondary"><i class="bi bi-arrow-left me-1" aria-hidden="true"></i>Inventory</a>
+            <a asp-action="Edit" asp-route-id="@Model.CardId" class="workspace-btn secondary"><i class="bi bi-pencil-square me-1" aria-hidden="true"></i>Edit Card</a>
+            <a asp-action="Delete" asp-route-id="@Model.CardId" class="workspace-btn danger"><i class="bi bi-trash3 me-1" aria-hidden="true"></i>Delete</a>
+        </div>
+    </header>
+
+    <div class="workspace-grid">
+        <section class="workspace-panel image-workspace">
+            <div class="panel-heading"><div><h2>Card Images</h2><p>Front and back scan workspace</p></div><a asp-action="Edit" asp-route-id="@Model.CardId"><i class="bi bi-images me-1" aria-hidden="true"></i>Replace images</a></div>
+            <div class="image-toolbar">
+                <button type="button" data-image-action="front" class="active" title="Show front image"><i class="bi bi-image" aria-hidden="true"></i><span>Front</span></button>
+                <button type="button" data-image-action="back" title="Show back image"><i class="bi bi-image-alt" aria-hidden="true"></i><span>Back</span></button>
+                <span></span>
+                <button type="button" id="rotateLeft" title="Rotate left"><i class="bi bi-arrow-counterclockwise" aria-hidden="true"></i></button>
+                <button type="button" id="rotateRight" title="Rotate right"><i class="bi bi-arrow-clockwise" aria-hidden="true"></i></button>
+                <button type="button" id="zoomImage" title="Zoom image"><i class="bi bi-zoom-in" aria-hidden="true"></i></button>
+            </div>
+            <div class="image-stage">
+                <div class="card-image-view active" data-side="front">
+                    @if (!string.IsNullOrWhiteSpace(front)) { <img src="@front" alt="Front of @title" /> }
+                    else { <div class="image-empty"><span aria-hidden="true"><i class="bi bi-image"></i></span><strong>No front image</strong><a asp-action="Edit" asp-route-id="@Model.CardId"><i class="bi bi-plus-circle me-1" aria-hidden="true"></i>Add image</a></div> }
+                </div>
+                <div class="card-image-view" data-side="back">
+                    @if (!string.IsNullOrWhiteSpace(back)) { <img src="@back" alt="Back of @title" /> }
+                    else { <div class="image-empty"><span aria-hidden="true"><i class="bi bi-image"></i></span><strong>No back image</strong><a asp-action="Edit" asp-route-id="@Model.CardId"><i class="bi bi-plus-circle me-1" aria-hidden="true"></i>Add image</a></div> }
+                </div>
+            </div>
+            <div class="image-meta"><span>Click zoom for full-screen inspection</span><span>Modified @Model.ModifiedDate.ToString("MMM d, yyyy")</span></div>
+        </section>
+
+        <section class="workspace-panel details-workspace">
+            <div class="panel-heading"><div><h2>Card Details</h2><p>Identity, attributes, and catalog data</p></div><span class="status-pill">@status</span></div>
+            <div class="identity-block">
+                <div><span>Player / Subject</span><strong>@title</strong></div>
+                <div><span>Team</span><strong>@(Model.Team ?? "—")</strong></div>
+            </div>
+            <div class="detail-grid">
+                <div><span>Year</span><strong>@(Model.Year?.ToString() ?? "—")</strong></div>
+                <div><span>Set</span><strong>@(Model.Set ?? "—")</strong></div>
+                <div><span>Card Number</span><strong>@(Model.CardNumber ?? "—")</strong></div>
+                <div><span>Category</span><strong>@Model.Category</strong></div>
+                <div><span>Parallel / Variety</span><strong>@(Model.Variety ?? "Base")</strong></div>
+                <div><span>Serial Number</span><strong>@(Model.Serial ?? "—")</strong></div>
+                <div><span>Quantity</span><strong>@Model.Quantity</strong></div>
+                <div><span>Checklist Link</span><strong>@(Model.ChecklistItemId.HasValue ? "Linked" : "Not linked")</strong></div>
+            </div>
+            <div class="attribute-row">
+                @if (Model.IsRookie) { <span class="attribute rookie"><i class="bi bi-star-fill me-1" aria-hidden="true"></i>Rookie</span> }
+                @if (Model.IsAutograph) { <span class="attribute auto"><i class="bi bi-pen-nib me-1" aria-hidden="true"></i>Autograph</span> }
+                @if (Model.IsRelic) { <span class="attribute relic"><i class="bi bi-shield-check me-1" aria-hidden="true"></i>Relic</span> }
+                @if (Model.IsRefractor) { <span class="attribute refractor"><i class="bi bi-layers me-1" aria-hidden="true"></i>Refractor</span> }
+                @if (!Model.IsRookie && !Model.IsAutograph && !Model.IsRelic && !Model.IsRefractor) { <span class="attribute neutral"><i class="bi bi-card-heading me-1" aria-hidden="true"></i>Standard card</span> }
+            </div>
+
+            <div class="workspace-divider"></div>
+            <div class="subsection-title"><h3>Grading</h3><a asp-action="Edit" asp-route-id="@Model.CardId">Update</a></div>
+            <div class="grading-summary">
+                <div class="grade-badge"><span>@(Model.GradeIssuer ?? "RAW")</span><strong>@(Model.Grade ?? "—")</strong></div>
+                <div><span>Status</span><strong>@gradeText</strong><small>Certification: @(Model.CertNumber ?? "Not entered")</small></div>
+                <div><span>PSA Estimate</span><strong>@((Model.PsaEstimate ?? 0m).ToString("C0"))</strong><small>Recorded estimate</small></div>
+            </div>
+        </section>
+
+        <aside class="workspace-side">
+            <section class="workspace-panel finance-panel">
+                <div class="panel-heading"><div><h2>Value & Profit</h2><p>Collection financial snapshot</p></div></div>
+                <div class="market-value"><span>Current value</span><strong>@((Model.MyValue ?? 0m).ToString("C2"))</strong></div>
+                <div class="finance-grid">
+                    <div><span>Cost</span><strong>@((Model.MyCost ?? 0m).ToString("C2"))</strong></div>
+                    <div><span>Gain / Loss</span><strong class="@gainClass">@(gain >= 0 ? "+" : "")@gain.ToString("C2")</strong></div>
+                    <div><span>Listing Price</span><strong>@((Model.ListingPrice ?? 0m).ToString("C2"))</strong></div>
+                    <div><span>Status</span><strong>@status</strong></div>
+                </div>
+                <a asp-action="Edit" asp-route-id="@Model.CardId" class="full-width-action">Update pricing</a>
+            </section>
+
+            <section class="workspace-panel storage-panel">
+                <div class="panel-heading"><div><h2>Storage</h2><p>Physical collection location</p></div></div>
+                <div class="storage-path"><span>@(Model.StorageBox ?? "No box")</span><b>›</b><span>@(Model.StorageRow ?? "No row")</span><b>›</b><span>@(Model.StorageBin ?? "No bin")</span></div>
+            </section>
+
+            <section class="workspace-panel notes-panel">
+                <div class="panel-heading"><div><h2>Notes</h2><p>Private inventory notes</p></div><a asp-action="Edit" asp-route-id="@Model.CardId">Edit</a></div>
+                <div class="notes-content">@(string.IsNullOrWhiteSpace(Model.MyNotes) ? "No notes have been entered for this card." : Model.MyNotes)</div>
+            </section>
+        </aside>
+    </div>
+</div>
+
+<div class="image-lightbox" id="imageLightbox" aria-hidden="true"><button type="button" id="closeLightbox" aria-label="Close">×</button><img id="lightboxImage" alt="Card image enlarged" /></div>
+
+@section Styles { <link rel="stylesheet" href="~/css/card-workspace.css" asp-append-version="true" /> }
+@section Scripts { <script src="~/js/card-workspace.js" asp-append-version="true"></script> }

@@ -1,0 +1,15 @@
+CardManager Pro v0.7.0 - Scanner and Import Workspace
+
+New:
+- Upload multiple scans directly into the scanner inbox.
+- Pair front and back images before import.
+- Zoom with mouse wheel, pan by dragging, rotate, and reset.
+- Search existing inventory and reference checklists before saving.
+- Select a match to automatically populate player, team, year, set, card number, variation and stock image.
+- Add a card to Inventory, Checklist, or both.
+- Increase quantity on an existing matched inventory record instead of making a duplicate.
+- Keep scan and stock-image options.
+- Version badge updated to v0.7.0.
+
+Database:
+- No new migration is required for this release.

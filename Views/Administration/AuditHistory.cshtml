@@ -1,0 +1,30 @@
+@model IBSCardManager.Models.AdministrationAuditHistoryViewModel
+@{ ViewData["Title"] = "Audit History"; }
+<div class="container py-4">
+    <h1>Audit History</h1>
+    <p class="text-muted">Configuration, provider, and credential change events.</p>
+
+    @if (!Model.Entries.Any())
+    {
+        <p class="text-muted">No audit entries recorded.</p>
+    }
+    else
+    {
+        <div class="table-responsive">
+            <table class="table table-sm table-striped">
+                <thead><tr><th>Timestamp</th><th>Category</th><th>Action</th><th>Detail</th></tr></thead>
+                <tbody>
+                @foreach (var entry in Model.Entries)
+                {
+                    <tr>
+                        <td>@entry.Timestamp.ToLocalTime().ToString("g")</td>
+                        <td>@entry.Category</td>
+                        <td>@entry.Action</td>
+                        <td>@entry.Detail</td>
+                    </tr>
+                }
+                </tbody>
+            </table>
+        </div>
+    }
+</div>

@@ -1,0 +1,1285 @@
+﻿@model IBSCardManager.Models.ScannerImportViewModel
+@{
+    ViewData["Title"] = "Scanner & Import";
+    var totalBytes = Model.Images.Sum(x => x.SizeBytes);
+}
+
+<div class="scan-workspace">
+    <section class="scan-workspace-header">
+        <div>
+            <span class="eyebrow">CARD INTAKE WORKSPACE</span>
+            <h1>Scanner &amp; Import</h1>
+            <p>Upload or review scans, pair front and back images, identify the card, then add it to inventory, a checklist, or both.</p>
+        </div>
+        <form asp-action="UploadScans" method="post" enctype="multipart/form-data" class="scan-upload-form">
+            @Html.AntiForgeryToken()
+            <label class="btn-secondary-app scan-file-button" title="Choose image files">
+                <i class="bi bi-folder2-open me-1" aria-hidden="true"></i>Choose images
+                <input type="file" name="files" multiple accept="image/jpeg,image/png,image/webp" hidden />
+            </label>
+            <button type="submit" class="btn-primary-app"><i class="bi bi-cloud-upload me-1" aria-hidden="true"></i>Upload to inbox</button>
+        </form>
+    </section>
+
+    @if (TempData["ScannerMessage"] is string scannerMessage)
+    {
+        <div class="alert alert-success">@scannerMessage</div>
+    }
+    @if (!string.IsNullOrWhiteSpace(Model.Message))
+    {
+        <div class="alert alert-warning">@Model.Message</div>
+    }
+
+    <section class="scan-metrics">
+        <article><span>Inbox</span><strong>@Model.Images.Count</strong><small>images waiting</small></article>
+        <article><span>Queue size</span><strong>@((totalBytes / 1048576d).ToString("N1")) MB</strong><small>JPG, PNG, WEBP</small></article>
+        <article><span>Pair status</span><strong id="pairStatus">No images selected</strong><small id="pairStatusSub">select front then back</small></article>
+        <article><span>Workflow</span><strong>Search first</strong><small>avoid duplicates</small></article>
+    </section>
+
+    <div class="scan-workspace-grid">
+        <aside class="scan-panel scan-inbox-panel">
+            <div class="scan-panel-title">
+                <div><h2>1. Pair images</h2><p>Click one image for the front, then click the second image for the back.</p></div>
+                <div class="scan-inbox-tools">
+                    <button type="button" class="btn-secondary-app active" id="pairSelectMode" title="Enable pair selection"><i class="bi bi-link-45deg me-1" aria-hidden="true"></i>Pair select: ON</button>
+                    <button type="button" class="btn-secondary-app" id="clearPair" title="Clear selected pair"><i class="bi bi-eraser me-1" aria-hidden="true"></i>Clear pair</button>
+                    <input type="search" id="scanFilter" placeholder="Filter filenames" />
+                </div>
+            </div>
+            <div class="scan-thumb-grid" id="scanThumbGrid">
+                @foreach (var image in Model.Images)
+                {
+                    <article class="scan-thumb" data-name="@image.FileName.ToLowerInvariant()" data-file="@image.FileName" data-src="@image.PreviewUrl">
+                        <button type="button" class="scan-thumb-image select-scan" aria-label="Select @image.FileName">
+                            <img src="@image.PreviewUrl" alt="@image.FileName" loading="lazy" />
+                            <span class="scan-side-badge"></span>
+                        </button>
+                        <div class="scan-thumb-info">
+                            <strong title="@image.FileName">@image.FileName</strong>
+                            <small>@image.ModifiedDate.ToString("MMM d, h:mm tt") · @((image.SizeBytes / 1024d).ToString("N0")) KB</small>
+                            <div class="scan-thumb-actions">
+                                <button type="button" class="set-front" title="Set as front image"><i class="bi bi-image me-1" aria-hidden="true"></i>Front</button>
+                                <button type="button" class="set-back" title="Set as back image"><i class="bi bi-image-alt me-1" aria-hidden="true"></i>Back</button>
+                                <button type="button" class="open-viewer" title="Open image"><i class="bi bi-zoom-in me-1" aria-hidden="true"></i>Zoom</button>
+                            </div>
+                        </div>
+                    </article>
+                }
+            </div>
+        </aside>
+
+        <main class="scan-panel scan-review-panel">
+            <div class="scan-panel-title">
+                <div><h2>2. Review pair</h2><p>Zoom, pan and rotate before accepting.</p></div>
+                <div class="scan-view-tools">
+                    <button type="button" id="zoomOut" title="Zoom out"><i class="bi bi-zoom-out" aria-hidden="true"></i></button>
+                    <button type="button" id="zoomReset" title="Reset viewer"><i class="bi bi-aspect-ratio" aria-hidden="true"></i></button>
+                    <button type="button" id="zoomIn" title="Zoom in"><i class="bi bi-zoom-in" aria-hidden="true"></i></button>
+                    <button type="button" id="rotateLeft" title="Rotate selected image left"><i class="bi bi-arrow-counterclockwise" aria-hidden="true"></i></button>
+                    <button type="button" id="rotateRight" title="Rotate selected image right"><i class="bi bi-arrow-clockwise" aria-hidden="true"></i></button>
+                </div>
+            </div>
+
+            <div class="scan-pair-preview">
+                <button type="button" class="scan-pair-slot active" data-side="front" id="frontSlot" title="Active front image">
+                    <span><i class="bi bi-image me-1" aria-hidden="true"></i>FRONT</span>
+                    <div><small>Select front image</small></div>
+                </button>
+                <button type="button" class="scan-pair-slot" data-side="back" id="backSlot" title="Active back image">
+                    <span><i class="bi bi-image-alt me-1" aria-hidden="true"></i>BACK</span>
+                    <div><small>Optional back image</small></div>
+                </button>
+            </div>
+
+            <div class="scan-main-viewer" id="mainViewer">
+                <div class="scan-viewer-stage" id="viewerStage">
+                    <p>Select an image from the inbox.</p>
+                </div>
+            </div>
+            <div class="scan-layout-actions">
+                <button type="button" class="btn-secondary-app" id="swapPair" title="Swap front and back"><i class="bi bi-arrow-left-right me-1" aria-hidden="true"></i>Swap front / back</button>
+                <button type="button" class="btn-secondary-app" id="autoRotatePair" title="Auto-rotate pair"><i class="bi bi-arrow-repeat me-1" aria-hidden="true"></i>Auto-rotate pair</button>
+                <button type="button" class="btn-primary-app" id="acceptLayout" title="Accept image layout"><i class="bi bi-check2-circle me-1" aria-hidden="true"></i>Accept layout</button>
+            </div>
+            <div class="scan-layout-status" id="layoutStatus">Select the images, correct their orientation, then accept the layout.</div>
+            <p class="scan-viewer-help">Select FRONT or BACK to toggle the active image. Mouse wheel zooms the preview; rotation is saved when you accept the layout.</p>
+        </main>
+
+        <aside class="scan-panel scan-identify-panel">
+            <div class="scan-panel-title"><div><h2>3. Identify &amp; save</h2><p>Search before creating a new record.</p></div></div>
+
+            <form asp-action="Import" method="post" id="scannerImportForm" class="scan-identify-form">
+                @Html.AntiForgeryToken()
+                <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+                <input asp-for="FrontFileName" type="hidden" id="frontFileName" />
+                <input asp-for="BackFileName" type="hidden" id="backFileName" />
+                <input asp-for="MatchedChecklistItemId" type="hidden" id="matchedChecklistId" />
+                <input asp-for="MatchedInventoryCardId" type="hidden" id="matchedInventoryId" />
+                <input asp-for="ConfirmedChecklistItemId" type="hidden" id="confirmedChecklistId" />
+                <input asp-for="ScannerPairId" type="hidden" id="scannerPairId" />
+                <input asp-for="ScannerPairState" type="hidden" id="scannerPairState" />
+                <input asp-for="FrontImageHash" type="hidden" id="frontImageHash" />
+                <input asp-for="BackImageHash" type="hidden" id="backImageHash" />
+                <input asp-for="CombinedImageHash" type="hidden" id="combinedImageHash" />
+                <input asp-for="IdentificationConfidence" type="hidden" id="identificationConfidence" />
+                <input asp-for="CandidateSource" type="hidden" id="candidateSource" />
+                <input asp-for="HasUserCorrections" type="hidden" id="hasUserCorrections" />
+                <input asp-for="CorrectionFieldName" type="hidden" id="correctionFieldName" />
+                <input asp-for="CorrectionType" type="hidden" id="correctionType" />
+                <input asp-for="CorrectionOriginalValue" type="hidden" id="correctionOriginalValue" />
+                <input asp-for="CorrectionCorrectedValue" type="hidden" id="correctionCorrectedValue" />
+                <input asp-for="CorrectionReason" type="hidden" id="correctionReason" />
+                <input asp-for="CorrectionNotes" type="hidden" id="correctionNotes" />
+                <div id="scannerAiSettings" data-enabled="@Model.EnableChatGptAnalysis" data-ask="@Model.AskBeforeChatGptUpload" data-local-only="@Model.LocalAnalysisOnly" data-reuse="@Model.ReuseCachedAnalysis" data-model="@Model.VisionModel" data-timeout="@Model.TimeoutSeconds" data-retries="@Model.MaxRetries" data-max-bytes="@Model.MaxImageBytes" hidden></div>
+
+                <div class="scan-identify-gate" id="identifyGate">
+                    <strong>Accept the image layout first</strong>
+                    <span>In the <em>Review pair</em> panel, review and rotate the images, then click <strong>Accept layout</strong>.</span>
+                    <button type="button" class="btn-primary-app" id="acceptLayoutShortcut"><i class="bi bi-check2-circle me-1" aria-hidden="true"></i>Go to Accept layout</button>
+                </div>
+
+                <div class="scan-search-box">
+                    <label for="matchSearch">Search player, set, team, year, or card number</label>
+                    <div><input id="matchSearch" type="search" placeholder="Example: Darrel Hernaiz 2024 Heritage 125" /><button type="button" id="searchMatches">Search</button></div>
+                    <div class="scan-entry-modes">
+                        <button type="button" class="btn-secondary-app" id="analyzePair" disabled>Analyze with ChatGPT</button>
+                        <span class="scan-analyze-hint" id="analyzePairHint">Select a front image and accept the layout first.</span>
+                        <button type="button" class="btn-secondary-app" id="identifyWithChatGpt">Reanalyze with ChatGPT</button>
+                        <button type="button" class="btn-secondary-app" id="searchFromFields">Search local catalog</button>
+                        <button type="button" class="btn-secondary-app" id="searchTcdb">Search TCDB</button>
+                        <button type="button" class="btn-secondary-app" id="manualEntry">Manual add</button>
+                    </div>
+                </div>
+
+                <div class="scan-analysis-panel" id="scannerAiSettingsPanel">
+                    <div class="scan-analysis-header"><strong>Scanner AI settings</strong></div>
+                    <div class="scan-field-grid">
+                        <label><input type="checkbox" id="settingEnableChatGpt" @(Model.EnableChatGptAnalysis ? "checked" : null) /> Enable ChatGPT analysis</label>
+                        <label><input type="checkbox" id="settingAskBeforeUpload" @(Model.AskBeforeChatGptUpload ? "checked" : null) /> Ask before uploading images</label>
+                        <label><input type="checkbox" id="settingLocalOnly" @(Model.LocalAnalysisOnly ? "checked" : null) /> Local analysis only</label>
+                        <label><input type="checkbox" id="settingAllowTextOnly" @(Model.AllowTextOnlyOnlineSearch ? "checked" : null) /> Allow text-only online search</label>
+                        <label><input type="checkbox" id="settingReuseCache" @(Model.ReuseCachedAnalysis ? "checked" : null) /> Reuse cached analysis</label>
+                        <label>Model<input type="text" id="settingModel" value="@Model.VisionModel" /></label>
+                        <label>Timeout seconds<input type="number" id="settingTimeout" min="15" value="@Model.TimeoutSeconds" /></label>
+                        <label>Retry count<input type="number" id="settingRetries" min="0" value="@Model.MaxRetries" /></label>
+                        <label class="wide">Maximum image size (bytes)<input type="number" id="settingMaxBytes" min="1000000" value="@Model.MaxImageBytes" /></label>
+                    </div>
+                    <div class="scan-save-actions">
+                        <button type="button" class="btn-secondary-app" id="saveAiSettings">Save AI settings</button>
+                        <button type="button" class="btn-secondary-app" id="testAiConnection">Test connection</button>
+                    </div>
+                </div>
+
+                <div class="scan-analysis-panel" id="analysisPanel">
+                    <div class="scan-match-empty">Run Analyze Pair to extract player, team, year, set, and card number from both sides.</div>
+                </div>
+
+                <div class="scan-match-results" id="matchResults" aria-live="polite">
+                    <div class="scan-match-empty">Enter details or search text to check inventory and checklists.</div>
+                </div>
+
+                <div class="scan-analysis-panel" id="comparisonPanel">
+                    <div class="scan-match-empty">Select a candidate to compare extracted values against catalog values.</div>
+                </div>
+
+                <div class="scan-analysis-panel" id="duplicatePanel">
+                    <div class="scan-match-empty">Duplicate check runs after you confirm the selected candidate.</div>
+                </div>
+
+                <div class="scan-save-actions">
+                    <button type="button" class="btn-secondary-app" id="confirmSelectedCard">Confirm Selected Card</button>
+                    <button type="button" class="btn-secondary-app" id="openCatalogCard">Open Catalog Card</button>
+                    <button type="button" class="btn-secondary-app" id="refineSearch">Refine Search</button>
+                    <button type="button" class="btn-secondary-app" id="saveUnmatchedDraft">Save as Unmatched Draft</button>
+                    <button type="button" class="btn-secondary-app" id="skipPair">Skip Pair</button>
+                </div>
+
+                <div class="scan-field-grid">
+                    <label class="wide">Player name<input asp-for="Subject" id="subjectField" /><span asp-validation-for="Subject"></span></label>
+                    <label>Team<input asp-for="Team" id="teamField" /></label>
+                    <label>Year<input asp-for="Year" id="yearField" type="number" min="1800" max="2200" /></label>
+                    <label class="wide">Set / product<input asp-for="Set" id="setField" /></label>
+                    <label>Card number<input asp-for="CardNumber" id="cardNumberField" /></label>
+                    <label>Quantity<input asp-for="Quantity" type="number" min="1" /></label>
+                    <label class="wide">Parallel / variation<input asp-for="Variety" id="varietyField" /></label>
+                    <label>Serial number<input asp-for="Serial" /></label>
+                    <label>Sport<input asp-for="Category" /></label>
+                </div>
+
+                <div class="scan-flags">
+                    <label><input asp-for="IsRookie" /> Rookie</label>
+                    <label><input asp-for="IsAutograph" /> Autograph</label>
+                    <label><input asp-for="IsRelic" /> Relic</label>
+                </div>
+
+                <div class="scan-destination">
+                    <strong>Save destination</strong>
+                    <label><input asp-for="Destination" type="radio" value="Inventory" /> Inventory only</label>
+                    <label><input asp-for="Destination" type="radio" value="Checklist" /> Checklist only</label>
+                    <label><input asp-for="Destination" type="radio" value="Both" /> Checklist + inventory</label>
+                </div>
+
+                <label>Catalog set
+                    <select asp-for="ProductId" asp-items="Model.Products" id="productField">
+                        <option value="">Select a set when adding to a checklist</option>
+                    </select>
+                    <span asp-validation-for="ProductId"></span>
+                </label>
+
+                <div class="scan-image-source">
+                    <strong>Primary inventory image</strong>
+                    <label><input asp-for="PreferredImageSource" type="radio" value="Scan" /> Accepted scan</label>
+                    <label><input asp-for="PreferredImageSource" type="radio" value="Stock" /> Stock image</label>
+                    <label class="wide">Stock image URL<input asp-for="StockImageUrl" id="stockImageField" placeholder="Paste an approved stock image URL" /></label>
+                </div>
+
+                <div class="scan-save-actions">
+                    <button type="button" class="btn-secondary-app" id="clearMatch">Clear match</button>
+                    <button type="submit" class="btn-primary-app">Save card</button>
+                </div>
+            </form>
+        </aside>
+    </div>
+</div>
+
+<div class="scan-lightbox" id="scanLightbox" hidden>
+    <button type="button" id="closeLightbox" aria-label="Close">×</button>
+    <img id="lightboxImage" alt="Enlarged scan" />
+</div>
+
+<div class="scan-lightbox" id="consentModal" hidden>
+    <div class="scan-panel" style="max-width:680px; width:100%; margin:auto;">
+        <h3>ChatGPT analysis consent</h3>
+        <p>ChatGPT analysis will securely send the selected card images to OpenAI for identification.</p>
+        <div class="scan-save-actions" style="justify-content:flex-start;">
+            <button type="button" class="btn-primary-app" id="consentAnalyzeOnce">Analyze this pair</button>
+            <button type="button" class="btn-secondary-app" id="consentAlwaysAllow">Always allow for scanner analysis</button>
+            <button type="button" class="btn-secondary-app" id="consentCancel">Cancel</button>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+<script>
+(() => {
+    const cards = [...document.querySelectorAll('.scan-thumb')];
+    const frontInput = document.getElementById('frontFileName');
+    const backInput = document.getElementById('backFileName');
+    const frontSlot = document.getElementById('frontSlot');
+    const backSlot = document.getElementById('backSlot');
+    const stage = document.getElementById('viewerStage');
+    const pairStatusEl = document.getElementById('pairStatus');
+    const pairStatusSubEl = document.getElementById('pairStatusSub');
+    const identifyPanel = document.querySelector('.scan-identify-panel');
+    const identifyGate = document.getElementById('identifyGate');
+    const layoutStatus = document.getElementById('layoutStatus');
+    const token = document.querySelector('#scannerImportForm input[name="__RequestVerificationToken"]')?.value || '';
+    const aiSettings = document.getElementById('scannerAiSettings');
+    const aiConfig = {
+        enabled: aiSettings?.dataset?.enabled?.toLowerCase() === 'true',
+        askBeforeUpload: aiSettings?.dataset?.ask?.toLowerCase() !== 'false',
+        localOnly: aiSettings?.dataset?.localOnly?.toLowerCase() === 'true',
+        reuseCached: aiSettings?.dataset?.reuse?.toLowerCase() !== 'false',
+        model: aiSettings?.dataset?.model || '',
+        timeoutSeconds: Number(aiSettings?.dataset?.timeout || 60),
+        maxRetries: Number(aiSettings?.dataset?.retries || 2)
+    };
+
+    const tcdbButton = document.getElementById('searchTcdb');
+    tcdbButton?.addEventListener('click', () => {
+        const values = [
+            document.getElementById('yearField')?.value,
+            document.getElementById('setField')?.value,
+            document.getElementById('subjectField')?.value,
+            document.getElementById('teamField')?.value,
+            document.getElementById('cardNumberField')?.value,
+            document.getElementById('varietyField')?.value
+        ].filter(Boolean);
+        const fallback = document.getElementById('matchSearch')?.value || '';
+        const query = (values.join(' ') || fallback).trim();
+        if (!query) {
+            alert('Enter a player, set, year, or card number before searching TCDB.');
+            return;
+        }
+        window.open('https://www.tcdb.com/Search.cfm?SearchCategory=Baseball&SearchMode=General&SearchString=' + encodeURIComponent(query), '_blank', 'noopener');
+    });
+
+    let activeSide = 'front';
+    let activeSrc = '';
+    let scale = 1;
+    let panX = 0;
+    let panY = 0;
+    let dragging = false;
+    let dragStartX = 0;
+    let dragStartY = 0;
+    let layoutAccepted = false;
+    let pairSelectMode = true;
+
+    const selected = {
+        front: null,
+        back: null
+    };
+
+    let currentExtraction = null;
+    let currentCandidates = [];
+    let selectedCandidate = null;
+    let scannerPairId = document.getElementById('scannerPairId')?.value || '';
+    const workflowStorageKey = 'scanner-workflow-state-v1';
+
+    function persistWorkflowState() {
+        const snapshot = {
+            selected,
+            frontFileName: frontInput.value,
+            backFileName: backInput.value,
+            pairId: scannerPairId,
+            pairState: document.getElementById('scannerPairState')?.value || '',
+            extraction: currentExtraction,
+            candidates: currentCandidates,
+            selectedCandidate,
+            fields: {
+                subject: fields?.subject?.value || '',
+                team: fields?.team?.value || '',
+                year: fields?.year?.value || '',
+                set: fields?.set?.value || '',
+                cardNumber: fields?.cardNumber?.value || '',
+                variety: fields?.variety?.value || ''
+            }
+        };
+        localStorage.setItem(workflowStorageKey, JSON.stringify(snapshot));
+    }
+
+    function restoreWorkflowState() {
+        const raw = localStorage.getItem(workflowStorageKey);
+        if (!raw) return;
+        try {
+            const snapshot = JSON.parse(raw);
+            scannerPairId = snapshot.pairId || scannerPairId;
+            if (snapshot.frontFileName) frontInput.value = snapshot.frontFileName;
+            if (snapshot.backFileName) backInput.value = snapshot.backFileName;
+            if (snapshot.pairState) document.getElementById('scannerPairState').value = snapshot.pairState;
+
+            if (snapshot.fields) {
+                fields.subject.value = snapshot.fields.subject || '';
+                fields.team.value = snapshot.fields.team || '';
+                fields.year.value = snapshot.fields.year || '';
+                fields.set.value = snapshot.fields.set || '';
+                fields.cardNumber.value = snapshot.fields.cardNumber || '';
+                fields.variety.value = snapshot.fields.variety || '';
+            }
+
+            if (snapshot.extraction) renderExtraction(snapshot.extraction);
+            if (snapshot.candidates?.length) {
+                renderCandidates(snapshot.candidates);
+                if (snapshot.selectedCandidate) {
+                    selectedCandidate = snapshot.selectedCandidate;
+                    const idx = snapshot.candidates.findIndex(x => x.checklistItemId === selectedCandidate.checklistItemId);
+                    const button = idx >= 0 ? document.querySelector(`.scan-match-card[data-index="${idx}"]`) : null;
+                    if (button) applyMatch(snapshot.candidates[idx], button);
+                }
+            }
+        } catch {
+            localStorage.removeItem(workflowStorageKey);
+        }
+    }
+
+    function resolveConsent() {
+        if (!aiConfig.enabled) return Promise.reject(new Error('ChatGPT image analysis is disabled.'));
+        if (aiConfig.localOnly) return Promise.reject(new Error('Local analysis only is enabled.'));
+
+        const rememberKey = 'scanner-ai-consent-always-allow';
+        const alwaysAllowed = localStorage.getItem(rememberKey) === 'true';
+        if (!aiConfig.askBeforeUpload || alwaysAllowed) {
+            return Promise.resolve({ consentApproved: true, alwaysAllow: alwaysAllowed });
+        }
+
+        const modal = document.getElementById('consentModal');
+        const onceButton = document.getElementById('consentAnalyzeOnce');
+        const alwaysButton = document.getElementById('consentAlwaysAllow');
+        const cancelButton = document.getElementById('consentCancel');
+
+        return new Promise((resolve, reject) => {
+            const cleanup = () => {
+                onceButton.onclick = null;
+                alwaysButton.onclick = null;
+                cancelButton.onclick = null;
+                modal.hidden = true;
+            };
+
+            onceButton.onclick = () => {
+                cleanup();
+                resolve({ consentApproved: true, alwaysAllow: false });
+            };
+
+            alwaysButton.onclick = () => {
+                localStorage.setItem(rememberKey, 'true');
+                cleanup();
+                resolve({ consentApproved: true, alwaysAllow: true });
+            };
+
+            cancelButton.onclick = () => {
+                cleanup();
+                reject(new Error('ChatGPT analysis was canceled.'));
+            };
+
+            modal.hidden = false;
+        });
+    }
+
+    function normalizeRotation(value) {
+        return ((value % 360) + 360) % 360;
+    }
+
+    function setIdentifyEnabled(enabled) {
+        layoutAccepted = enabled;
+        identifyPanel.classList.toggle('layout-locked', !enabled);
+        identifyGate.hidden = enabled;
+        document.getElementById('searchMatches').disabled = !enabled;
+        document.getElementById('searchFromFields').disabled = !enabled;
+        document.getElementById('identifyWithChatGpt').disabled = !enabled;
+        document.getElementById('manualEntry').disabled = !enabled;
+        const apBtn = document.getElementById('analyzePair');
+        const apHint = document.getElementById('analyzePairHint');
+        if (apBtn) {
+            const hasFront = !!frontInput.value;
+            apBtn.disabled = !enabled || !hasFront;
+            if (apHint) {
+                if (!hasFront) { apHint.textContent = 'Select a front image first.'; apHint.hidden = false; }
+                else if (!enabled) { apHint.textContent = 'Accept the image layout first.'; apHint.hidden = false; }
+                else { apHint.textContent = ''; apHint.hidden = true; }
+            }
+        }
+    }
+
+    function invalidateLayout(message = 'Layout changed. Accept it again before identifying the card.') {
+        setIdentifyEnabled(false);
+        layoutStatus.className = 'scan-layout-status';
+        layoutStatus.textContent = message;
+    }
+
+    function renderSlot(side) {
+        const slot = side === 'front' ? frontSlot : backSlot;
+        const item = selected[side];
+        slot.querySelector('div').innerHTML = item
+            ? `<img src="${item.src}" alt="${side} scan" style="transform:rotate(${item.rotation}deg)"><small>${item.file}</small>`
+            : `<small>${side === 'front' ? 'Select front image' : 'Optional back image'}</small>`;
+        if (pairStatusEl) {
+            if (selected.front && selected.back) {
+                pairStatusEl.textContent = 'Front \u0026 back selected';
+                if (pairStatusSubEl) pairStatusSubEl.textContent = 'accept layout to continue';
+            } else if (selected.front) {
+                pairStatusEl.textContent = 'Front selected';
+                if (pairStatusSubEl) pairStatusSubEl.textContent = 'back image not yet selected';
+            } else {
+                pairStatusEl.textContent = 'No images selected';
+                if (pairStatusSubEl) pairStatusSubEl.textContent = 'select front then back';
+            }
+        }
+        cards.forEach(card => {
+            const badge = card.querySelector('.scan-side-badge');
+            const isFront = selected.front?.originalFile === card.dataset.file;
+            const isBack = selected.back?.originalFile === card.dataset.file;
+            badge.textContent = isFront ? 'FRONT' : isBack ? 'BACK' : '';
+            card.classList.toggle('selected-front', isFront);
+            card.classList.toggle('selected-back', isBack);
+        });
+    }
+
+    function showInViewer(side) {
+        const item = selected[side];
+        activeSide = side;
+        frontSlot.classList.toggle('active', side === 'front');
+        backSlot.classList.toggle('active', side === 'back');
+        if (!item) {
+            activeSrc = '';
+            stage.innerHTML = `<p>Select a ${side} image from the inbox.</p>`;
+            return;
+        }
+        activeSrc = item.src;
+        scale = 1;
+        panX = 0;
+        panY = 0;
+        stage.innerHTML = `<img src="${item.src}" alt="Selected card scan" id="viewerImage">`;
+        applyTransform();
+    }
+
+    function applyTransform() {
+        const image = document.getElementById('viewerImage');
+        if (!image) return;
+        const rotation = selected[activeSide]?.rotation || 0;
+        image.style.transform = `translate(${panX}px, ${panY}px) scale(${scale}) rotate(${rotation}deg)`;
+        document.getElementById('zoomReset').textContent = `${Math.round(scale * 100)}%`;
+    }
+
+    function assign(card, side) {
+        const otherSide = side === 'front' ? 'back' : 'front';
+        if (selected[otherSide]?.originalFile === card.dataset.file) selected[otherSide] = null;
+        selected[side] = { originalFile: card.dataset.file, file: card.dataset.file, src: card.dataset.src, rotation: 0 };
+        if (side === 'front') frontInput.value = card.dataset.file; else backInput.value = card.dataset.file;
+        if (!selected[otherSide]) document.getElementById(otherSide === 'front' ? 'frontFileName' : 'backFileName').value = '';
+        renderSlot('front');
+        renderSlot('back');
+        showInViewer(side);
+        invalidateLayout();
+    }
+
+    function rotateActive(delta) {
+        const item = selected[activeSide];
+        if (!item) return;
+        item.rotation = normalizeRotation(item.rotation + delta);
+        renderSlot(activeSide);
+        applyTransform();
+        invalidateLayout();
+    }
+
+    async function imageDimensions(src) {
+        return await new Promise((resolve, reject) => {
+            const image = new Image();
+            image.onload = () => resolve({ width: image.naturalWidth, height: image.naturalHeight });
+            image.onerror = reject;
+            image.src = src;
+        });
+    }
+
+    async function autoRotatePair() {
+        for (const side of ['front', 'back']) {
+            const item = selected[side];
+            if (!item) continue;
+            const dimensions = await imageDimensions(item.src);
+            const rotated = item.rotation === 90 || item.rotation === 270;
+            const displayedWidth = rotated ? dimensions.height : dimensions.width;
+            const displayedHeight = rotated ? dimensions.width : dimensions.height;
+            if (displayedWidth > displayedHeight) item.rotation = normalizeRotation(item.rotation + 90);
+            renderSlot(side);
+        }
+        showInViewer(activeSide);
+        invalidateLayout('Auto-rotation applied. Review both sides, then accept the layout.');
+    }
+
+    async function createAcceptedBlob(item) {
+        const image = await new Promise((resolve, reject) => {
+            const loaded = new Image();
+            loaded.onload = () => resolve(loaded);
+            loaded.onerror = () => reject(new Error('The selected image could not be loaded for layout acceptance.'));
+            loaded.src = item.src;
+        });
+        const rotation = normalizeRotation(item.rotation);
+        const swap = rotation === 90 || rotation === 270;
+        const canvas = document.createElement('canvas');
+        canvas.width = swap ? image.naturalHeight : image.naturalWidth;
+        canvas.height = swap ? image.naturalWidth : image.naturalHeight;
+        if (!canvas.width || !canvas.height) {
+            throw new Error('The selected image has invalid dimensions.');
+        }
+        const context = canvas.getContext('2d');
+        if (!context) {
+            throw new Error('Unable to prepare the accepted image.');
+        }
+        context.translate(canvas.width / 2, canvas.height / 2);
+        context.rotate(rotation * Math.PI / 180);
+        context.drawImage(image, -image.naturalWidth / 2, -image.naturalHeight / 2);
+        const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/jpeg', 0.95));
+        if (!blob) {
+            throw new Error('The accepted image could not be encoded.');
+        }
+        return blob;
+    }
+
+    async function saveAcceptedSide(side) {
+        const item = selected[side];
+        if (!item) return null;
+        const blob = await createAcceptedBlob(item);
+        const form = new FormData();
+        form.append('__RequestVerificationToken', token);
+        form.append('side', side);
+        form.append('sourceFileName', item.originalFile);
+        form.append('file', blob, `${side}-accepted.jpg`);
+
+        const controller = new AbortController();
+        const timeoutHandle = setTimeout(() => controller.abort(), 30000);
+        let response;
+        try {
+            response = await fetch('@Url.Action("SaveAcceptedImage", "Scanner")', { method: 'POST', body: form, signal: controller.signal });
+        } catch (error) {
+            if (error?.name === 'AbortError') {
+                throw new Error(`Saving the accepted ${side} image timed out. Try again.`);
+            }
+            throw error;
+        } finally {
+            clearTimeout(timeoutHandle);
+        }
+
+        if (!response.ok) {
+            const serverMessage = await response.text();
+            throw new Error(serverMessage || `The accepted ${side} image could not be saved.`);
+        }
+        return await response.json();
+    }
+
+    function selectCardForPair(card) {
+        const existingSide = selected.front?.originalFile === card.dataset.file
+            ? 'front'
+            : selected.back?.originalFile === card.dataset.file ? 'back' : null;
+        if (existingSide) {
+            showInViewer(existingSide);
+            return;
+        }
+        if (!selected.front) assign(card, 'front');
+        else if (!selected.back) assign(card, 'back');
+        else assign(card, activeSide);
+    }
+
+    function confidenceLabel(score) {
+        if (score >= 95) return 'Very strong';
+        if (score >= 85) return 'Strong';
+        if (score >= 70) return 'Review';
+        return 'Low';
+    }
+
+    cards.forEach(card => {
+        card.querySelector('.set-front').addEventListener('click', event => { event.stopPropagation(); assign(card, 'front'); });
+        card.querySelector('.set-back').addEventListener('click', event => { event.stopPropagation(); assign(card, 'back'); });
+        card.querySelector('.select-scan').addEventListener('click', () => {
+            if (pairSelectMode) selectCardForPair(card);
+            else {
+                const side = selected.front?.originalFile === card.dataset.file ? 'front' : selected.back?.originalFile === card.dataset.file ? 'back' : null;
+                if (side) showInViewer(side);
+            }
+        });
+        card.querySelectorAll('.open-viewer').forEach(button => button.addEventListener('click', event => {
+            event.stopPropagation();
+            const side = selected.front?.originalFile === card.dataset.file ? 'front' : selected.back?.originalFile === card.dataset.file ? 'back' : null;
+            if (side) showInViewer(side); else selectCardForPair(card);
+        }));
+    });
+
+    document.getElementById('pairSelectMode').addEventListener('click', event => {
+        pairSelectMode = !pairSelectMode;
+        event.currentTarget.classList.toggle('active', pairSelectMode);
+        event.currentTarget.textContent = `Pair select: ${pairSelectMode ? 'ON' : 'OFF'}`;
+    });
+    document.getElementById('clearPair').addEventListener('click', () => {
+        selected.front = null; selected.back = null;
+        frontInput.value = ''; backInput.value = '';
+        renderSlot('front'); renderSlot('back'); showInViewer('front');
+        invalidateLayout('Pair cleared. Select the front image, then the back image.');
+    });
+
+    frontSlot.addEventListener('click', () => showInViewer('front'));
+    backSlot.addEventListener('click', () => showInViewer('back'));
+    document.getElementById('zoomIn').addEventListener('click', () => { scale = Math.min(5, scale + .2); applyTransform(); });
+    document.getElementById('zoomOut').addEventListener('click', () => { scale = Math.max(.25, scale - .2); applyTransform(); });
+    document.getElementById('zoomReset').addEventListener('click', () => { scale = 1; panX = panY = 0; applyTransform(); });
+    document.getElementById('rotateLeft').addEventListener('click', () => rotateActive(-90));
+    document.getElementById('rotateRight').addEventListener('click', () => rotateActive(90));
+    document.getElementById('autoRotatePair').addEventListener('click', autoRotatePair);
+    document.getElementById('swapPair').addEventListener('click', () => {
+        [selected.front, selected.back] = [selected.back, selected.front];
+        frontInput.value = selected.front?.file || '';
+        backInput.value = selected.back?.file || '';
+        renderSlot('front'); renderSlot('back'); showInViewer('front'); invalidateLayout('Front and back were swapped. Review and accept the layout.');
+    });
+    document.getElementById('acceptLayoutShortcut')?.addEventListener('click', () => {
+        const target = document.getElementById('acceptLayout');
+        target.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        target.focus();
+        target.classList.add('highlight-pulse');
+        setTimeout(() => target.classList.remove('highlight-pulse'), 2000);
+    });
+
+    document.getElementById('acceptLayout').addEventListener('click', async () => {
+        if (!selected.front) {
+            layoutStatus.className = 'scan-layout-status error';
+            layoutStatus.textContent = 'Choose a front image before accepting the layout.';
+            return;
+        }
+        const button = document.getElementById('acceptLayout');
+        button.disabled = true;
+        button.textContent = 'Accepting…';
+        let succeeded = false;
+        const warnings = [];
+        try {
+            let front = null;
+            let back = null;
+
+            try {
+                front = await saveAcceptedSide('front');
+            } catch (error) {
+                warnings.push(`Front save warning: ${error.message}`);
+            }
+
+            try {
+                back = await saveAcceptedSide('back');
+            } catch (error) {
+                if (selected.back) {
+                    warnings.push(`Back save warning: ${error.message}`);
+                }
+            }
+
+            if (front) { selected.front.file = front.fileName; selected.front.src = front.previewUrl; frontInput.value = front.fileName; }
+            if (back) { selected.back.file = back.fileName; selected.back.src = back.previewUrl; backInput.value = back.fileName; }
+
+            if (!frontInput.value && selected.front?.file) {
+                frontInput.value = selected.front.file;
+            }
+            if (!backInput.value && selected.back?.file) {
+                backInput.value = selected.back.file;
+            }
+
+            renderSlot('front'); renderSlot('back'); showInViewer(activeSide);
+            setIdentifyEnabled(true);
+            document.getElementById('scannerPairState').value = 'Layout accepted';
+            layoutStatus.className = warnings.length ? 'scan-layout-status warning' : 'scan-layout-status accepted';
+            layoutStatus.textContent = warnings.length
+                ? `Layout accepted with warnings. ${warnings.join(' ')}`
+                : (selected.back
+                    ? 'Layout accepted — front and back ready. Click Analyze Pair to extract card details.'
+                    : 'Layout accepted — front only. Click Analyze Pair (back image improves accuracy).');
+            button.innerHTML = '<i class="bi bi-check2-circle me-1" aria-hidden="true"></i>✓ Layout accepted';
+            succeeded = true;
+            document.getElementById('analyzePair').focus();
+            persistWorkflowState();
+        } catch (error) {
+            layoutStatus.className = 'scan-layout-status error';
+            layoutStatus.textContent = error.message;
+        } finally {
+            button.disabled = false;
+            if (!succeeded) button.innerHTML = '<i class="bi bi-check2-circle me-1" aria-hidden="true"></i>Accept layout';
+        }
+    });
+
+    stage.addEventListener('wheel', event => { if (!activeSrc) return; event.preventDefault(); scale = Math.max(.25, Math.min(5, scale + (event.deltaY < 0 ? .12 : -.12))); applyTransform(); }, { passive: false });
+    stage.addEventListener('pointerdown', event => { if (!activeSrc) return; dragging = true; dragStartX = event.clientX - panX; dragStartY = event.clientY - panY; stage.setPointerCapture(event.pointerId); });
+    stage.addEventListener('pointermove', event => { if (!dragging) return; panX = event.clientX - dragStartX; panY = event.clientY - dragStartY; applyTransform(); });
+    stage.addEventListener('pointerup', () => dragging = false);
+
+    document.getElementById('scanFilter').addEventListener('input', event => {
+        const term = event.target.value.toLowerCase();
+        cards.forEach(card => card.hidden = !card.dataset.name.includes(term));
+    });
+
+    const fields = {
+        subject: document.getElementById('subjectField'), team: document.getElementById('teamField'), year: document.getElementById('yearField'),
+        set: document.getElementById('setField'), cardNumber: document.getElementById('cardNumberField'), variety: document.getElementById('varietyField'),
+        stock: document.getElementById('stockImageField'), product: document.getElementById('productField')
+    };
+
+    async function search(useFields = false) {
+        if (!layoutAccepted) return;
+        const raw = document.getElementById('matchSearch').value.trim();
+        const params = new URLSearchParams();
+        if (raw) params.set('query', raw);
+        if (useFields || !raw) {
+            if (fields.subject.value) params.set('player', fields.subject.value);
+            if (fields.set.value) params.set('set', fields.set.value);
+            if (fields.cardNumber.value) params.set('cardNumber', fields.cardNumber.value);
+            if (fields.team.value) params.set('team', fields.team.value);
+            if (fields.year.value) params.set('year', fields.year.value);
+        }
+        const results = document.getElementById('matchResults');
+        results.innerHTML = '<div class="scan-match-empty">Searching inventory and reference checklists…</div>';
+        try {
+            const response = await fetch(`@Url.Action("SearchMatches", "Scanner")?${params}`);
+            if (!response.ok) throw new Error('Search failed.');
+            const data = await response.json();
+            if (!data.length) {
+                results.innerHTML = '<div class="scan-match-empty"><strong>No match found.</strong><br>Use Manual add and enter the card details below.</div>';
+                return;
+            }
+            results.innerHTML = data.map((item, index) => `
+                <button type="button" class="scan-match-card" data-index="${index}">
+                    <span class="scan-match-type ${item.type}">${item.type === 'inventory' ? 'IN INVENTORY' : 'CHECKLIST'}</span>
+                    ${item.image ? `<img src="${item.image}" alt="">` : '<span class="scan-match-placeholder">No image</span>'}
+                    <span><strong>${item.player || 'Unknown player'}</strong><small>${item.year || ''} ${item.set || ''}</small><small>#${item.cardNumber || '—'} · ${item.team || 'No team'}${item.quantity ? ` · Qty ${item.quantity}` : ''}</small></span>
+                </button>`).join('');
+            [...results.querySelectorAll('.scan-match-card')].forEach(button => button.addEventListener('click', () => applyMatch(data[Number(button.dataset.index)], button)));
+        } catch (error) {
+            results.innerHTML = `<div class="scan-match-empty">${error.message}</div>`;
+        }
+    }
+
+    function renderExtraction(extraction) {
+        currentExtraction = extraction || null;
+        const panel = document.getElementById('analysisPanel');
+        if (!panel) return;
+        const confidence = Math.round((extraction?.overallConfidence || 0) * 100);
+        document.getElementById('identificationConfidence').value = (extraction?.overallConfidence || 0);
+        const badge = confidence >= 95 ? 'Very Strong Match' : confidence >= 85 ? 'Strong Match' : confidence >= 70 ? 'Review Required' : 'Weak Match';
+
+        const fieldRows = [
+            ['Player', 'player', 'subjectField'],
+            ['Team', 'team', 'teamField'],
+            ['Year', 'year', 'yearField'],
+            ['Manufacturer', 'manufacturer', null],
+            ['Brand', 'brand', null],
+            ['Product / Set', 'product', 'setField'],
+            ['Product Edition', 'productEdition', null],
+            ['Card Number', 'cardNumber', 'cardNumberField'],
+            ['Checklist Section', 'checklistSection', null],
+            ['Parallel', 'parallel', 'varietyField'],
+            ['Variation', 'variation', 'varietyField'],
+            ['Rookie', 'rookie', null],
+            ['Autograph', 'autograph', null],
+            ['Relic', 'relic', null],
+            ['Patch', 'patch', null],
+            ['Short Print', 'shortPrint', null],
+            ['Serial Number', 'serialNumber', '[name="Serial"]'],
+            ['Serial Maximum', 'serialMaximum', null]
+        ];
+
+        const warnings = extraction?.warnings || [];
+        const rawText = extraction?.visibleText?.value || '';
+
+        panel.innerHTML = `
+            <div class="scan-analysis-header"><strong>Extraction Summary</strong><span class="scan-confidence">${badge} ${confidence}%</span></div>
+            ${warnings.length ? `<div class="scan-match-empty"><strong>Analysis warnings</strong><br>${warnings.map(x => x).join('<br>')}</div>` : ''}
+            <div class="scan-analysis-grid">
+                ${fieldRows.map(([label, key, boundField]) => {
+                    const field = extraction?.[key] || {};
+                    const value = field?.value || '';
+                    const source = field?.source || 'Unknown';
+                    const pct = Math.round((field?.confidence || 0) * 100);
+                    const inputId = `extract-${key}`;
+                    const bindTarget = boundField || '';
+                    const warn = pct > 0 && pct < 70 ? ' ⚠' : '';
+                    return `<label class="scan-analysis-field"><span>${label}${warn}</span><input id="${inputId}" data-bind-target="${bindTarget}" data-field-key="${key}" value="${value.replaceAll('"', '&quot;')}" /><small>${pct}% · ${source}</small></label>`;
+                }).join('')}
+            </div>
+            <details class="scan-match-empty"><summary>Diagnostic extracted text</summary><pre style="white-space:pre-wrap; margin-top:.5rem;">${rawText || 'No extracted text available.'}</pre></details>
+        `;
+
+        panel.querySelectorAll('input[data-field-key]').forEach(input => {
+            input.addEventListener('change', () => {
+                const key = input.dataset.fieldKey;
+                const previousValue = currentExtraction?.[key]?.value || '';
+                if (!currentExtraction[key]) currentExtraction[key] = {};
+                currentExtraction[key].value = input.value;
+                currentExtraction[key].source = 'User corrected';
+
+                document.getElementById('hasUserCorrections').value = 'true';
+                document.getElementById('correctionFieldName').value = key;
+                document.getElementById('correctionType').value = key;
+                document.getElementById('correctionOriginalValue').value = previousValue;
+                document.getElementById('correctionCorrectedValue').value = input.value;
+                document.getElementById('correctionReason').value = 'Scanner extraction corrected by user';
+                document.getElementById('correctionNotes').value = `Field ${key} updated from scanner analysis during import review.`;
+
+                const bindTarget = input.dataset.bindTarget;
+                if (bindTarget) {
+                    const bound = bindTarget.startsWith('[')
+                        ? document.querySelector(bindTarget)
+                        : document.getElementById(bindTarget);
+                    if (bound) bound.value = input.value;
+                }
+                search(true);
+                persistWorkflowState();
+            });
+        });
+    }
+
+	function renderCandidates(candidates) {
+		currentCandidates = candidates || [];
+		const results = document.getElementById('matchResults');
+		if (!results) return;
+		if (!currentCandidates.length) {
+			results.innerHTML = '<div class="scan-match-empty"><strong>No candidate results.</strong><br>Try editing extraction fields or searching online.</div>';
+			return;
+		}
+
+		results.innerHTML = currentCandidates.map((item, index) => `
+			<button type="button" class="scan-match-card" data-index="${index}">
+				<span class="scan-match-type checklist">${item.matchStatus || confidenceLabel(item.confidence || 0)}</span>
+				${item.referenceImageUrl ? `<img src="${item.referenceImageUrl}" alt="">` : '<span class="scan-match-placeholder">No image</span>'}
+				<span>
+					<strong>${item.player || 'Unknown player'}</strong>
+					<small>${item.year || ''} ${item.manufacturer || ''} ${item.brand || ''}</small>
+					<small>${item.product || ''} · ${item.checklistSection || 'No section'} · #${item.cardNumber || '—'}</small>
+					<small>${item.team || 'No team'} · Parallel ${item.parallel || '—'} · Variation ${item.variation || '—'}</small>
+					<small>R:${item.isRookie ? 'Y' : 'N'} A:${item.isAutograph ? 'Y' : 'N'} Relic:${item.isRelic ? 'Y' : 'N'} · Serial Max ${item.serialMaximum || '—'}</small>
+					<small>Confidence ${Math.round(item.confidence || 0)}% · Source ${item.catalogSource || 'Local checklist'} · Checklist ID ${item.checklistItemId || '—'}</small>
+					<small>Reasons: ${(item.matchReasons || []).join(', ') || 'None'}</small>
+					<small>Conflicts: ${(item.conflicts || []).join(', ') || 'None'}</small>
+				</span>
+			</button>`).join('');
+
+		[...results.querySelectorAll('.scan-match-card')].forEach(button => button.addEventListener('click', () => applyMatch(currentCandidates[Number(button.dataset.index)], button)));
+
+		const veryStrong = currentCandidates.findIndex(x => (x.confidence || 0) >= 95);
+		if (veryStrong >= 0) {
+			const button = results.querySelector(`.scan-match-card[data-index="${veryStrong}"]`);
+			if (button) applyMatch(currentCandidates[veryStrong], button);
+		}
+	}
+
+	async function analyzePair(options = {}) {
+		if (!layoutAccepted || !frontInput.value) return;
+		const btn = document.getElementById('analyzePair');
+		const results = document.getElementById('matchResults');
+		const analysis = document.getElementById('analysisPanel');
+		if (btn) { btn.disabled = true; btn.textContent = 'Analyzing with ChatGPT\u2026'; }
+		const hasBack = !!backInput.value;
+		const stages = [
+			'Preparing images',
+			'Sending images securely',
+			'Reading front',
+			hasBack ? 'Reading back' : 'Reading back (not provided)',
+			'Extracting card details',
+			'Searching local catalog',
+			'Ranking matches'
+		];
+		let si = 0;
+		analysis.innerHTML = '<div class="scan-match-empty">' + stages[0] + '\u2026</div>';
+		results.innerHTML = '<div class="scan-match-empty">Analyzing the paired images with ChatGPT\u2026</div>';
+		const timer = setInterval(() => {
+			si = Math.min(si + 1, stages.length - 1);
+			analysis.innerHTML = '<div class="scan-match-empty">' + stages[si] + '</div>';
+		}, 650);
+		try {
+			const consent = options.skipConsent ? { consentApproved: true, alwaysAllow: false } : await resolveConsent();
+			const form = new FormData();
+			form.append('__RequestVerificationToken', token);
+			form.append('frontFileName', frontInput.value);
+			if (backInput.value) form.append('backFileName', backInput.value);
+			if (fields.product.value) form.append('productId', fields.product.value);
+			form.append('player', fields.subject.value || '');
+			form.append('team', fields.team.value || '');
+			if (fields.year.value) form.append('year', fields.year.value);
+			form.append('product', fields.set.value || '');
+			form.append('cardNumber', fields.cardNumber.value || '');
+			form.append('parallel', fields.variety.value || '');
+			form.append('variation', fields.variety.value || '');
+			form.append('consentApproved', consent.consentApproved ? 'true' : 'false');
+			form.append('alwaysAllow', consent.alwaysAllow ? 'true' : 'false');
+			const serialInput = document.querySelector('[name="Serial"]');
+			if (serialInput?.value) form.append('serialNumber', serialInput.value);
+			const response = await fetch('@Url.Action("AnalyzePair", "Scanner")', { method: 'POST', body: form });
+			const payload = await response.json().catch(() => null);
+			clearInterval(timer);
+			if (!response.ok) throw new Error(payload?.message || 'Pair analysis failed.');
+			if (!payload?.extraction && !payload?.candidates?.length) {
+				analysis.innerHTML = '<div class="scan-match-empty"><strong>No readable card data.</strong><br>Retry ChatGPT analysis, run local search, or use manual add.</div>';
+				results.innerHTML = '<div class="scan-match-empty">No candidates found. Try Search local catalog or Manual add.</div>';
+				return;
+			}
+			renderExtraction(payload.extraction);
+			renderCandidates(payload.candidates);
+			scannerPairId = payload.pairId || scannerPairId;
+			document.getElementById('scannerPairId').value = scannerPairId;
+			document.getElementById('scannerPairState').value = 'Extraction complete';
+			if (payload.cached) {
+				results.insertAdjacentHTML('afterbegin', '<div class="scan-match-empty"><strong>Using saved analysis result</strong></div>');
+			}
+			persistWorkflowState();
+			return payload;
+		} catch (err) {
+			clearInterval(timer);
+			throw err;
+		} finally {
+			if (btn) { btn.disabled = !layoutAccepted; btn.textContent = 'Analyze with ChatGPT'; }
+		}
+	}
+
+    function renderComparison(item) {
+        const panel = document.getElementById('comparisonPanel');
+        if (!panel) return;
+        const rows = [
+            ['Player', fields.subject.value, item.player],
+            ['Team', fields.team.value, item.team],
+            ['Year', fields.year.value, item.year],
+            ['Product', fields.set.value, item.product],
+            ['Card Number', fields.cardNumber.value, item.cardNumber],
+            ['Parallel', fields.variety.value, item.parallel],
+            ['Variation', fields.variety.value, item.variation],
+            ['Rookie', document.querySelector('[name="IsRookie"]')?.checked ? 'True' : 'False', item.isRookie ? 'True' : 'False'],
+            ['Autograph', document.querySelector('[name="IsAutograph"]')?.checked ? 'True' : 'False', item.isAutograph ? 'True' : 'False'],
+            ['Relic', document.querySelector('[name="IsRelic"]')?.checked ? 'True' : 'False', item.isRelic ? 'True' : 'False'],
+            ['Serial Maximum', '', item.serialMaximum]
+        ];
+
+        const classify = (left, right) => {
+            if (!left || !right) return 'Unknown';
+            if (`${left}`.toLowerCase() === `${right}`.toLowerCase()) return 'Match';
+            if (`${left}`.toLowerCase().includes(`${right}`.toLowerCase()) || `${right}`.toLowerCase().includes(`${left}`.toLowerCase())) return 'Possible match';
+            return 'Conflict';
+        };
+
+        panel.innerHTML = `
+            <div class="scan-analysis-header"><strong>Extracted vs Catalog</strong></div>
+            <div class="scan-analysis-grid">
+                ${rows.map(([field, extracted, catalog]) => `<div class="scan-analysis-field"><span>${field}</span><strong>${extracted || '—'} vs ${catalog || '—'}</strong><small>${classify(extracted, catalog)}</small></div>`).join('')}
+            </div>
+        `;
+    }
+
+    function applyMatch(item, button) {
+        selectedCandidate = item;
+        document.querySelectorAll('.scan-match-card').forEach(x => x.classList.remove('selected'));
+        if (button) button.classList.add('selected');
+        fields.subject.value = item.player || '';
+        fields.team.value = item.team || '';
+        fields.year.value = item.year || '';
+        fields.set.value = item.product || '';
+        fields.cardNumber.value = item.cardNumber || '';
+        fields.variety.value = item.parallel || item.variation || '';
+        if (item.referenceImageUrl) fields.stock.value = item.referenceImageUrl;
+        if (item.productId) fields.product.value = item.productId;
+        document.getElementById('candidateSource').value = item.catalogSource || 'local-catalog';
+        document.getElementById('matchedInventoryId').value = item.inventoryCardId || '';
+        document.getElementById('matchedChecklistId').value = item.checklistItemId || '';
+        document.getElementById('confirmedChecklistId').value = '';
+        document.getElementById('scannerPairState').value = 'Candidate selected';
+        renderComparison(item);
+        persistWorkflowState();
+    }
+
+    document.getElementById('identifyWithChatGpt').addEventListener('click', async () => {
+        if (!layoutAccepted || !frontInput.value) return;
+        const button = document.getElementById('identifyWithChatGpt');
+        const results = document.getElementById('matchResults');
+        button.disabled = true;
+        button.textContent = 'Reanalyzing…';
+        try {
+            const consent = await resolveConsent();
+            const form = new FormData();
+            form.append('__RequestVerificationToken', token);
+            form.append('frontFileName', frontInput.value);
+            if (backInput.value) form.append('backFileName', backInput.value);
+            form.append('consentApproved', consent.consentApproved ? 'true' : 'false');
+            const response = await fetch('@Url.Action("IdentifyWithChatGpt", "Scanner")', { method: 'POST', body: form });
+            const payload = await response.json().catch(() => null);
+            if (!response.ok) throw new Error(payload?.message || 'ChatGPT reanalysis failed.');
+
+            const analysis = payload.result || {};
+            const mapField = field => ({ value: field?.value ?? null, confidence: field?.confidence ?? 0, source: (field?.evidenceSource || 'unknown').replace(/^./, m => m.toUpperCase()) });
+            const extraction = {
+                player: mapField(analysis.playerName),
+                team: mapField(analysis.team),
+                year: mapField(analysis.year),
+                manufacturer: mapField(analysis.manufacturer),
+                brand: mapField(analysis.brand),
+                product: mapField(analysis.product),
+                productEdition: mapField(analysis.productEdition),
+                checklistSection: mapField(analysis.checklistSection),
+                cardNumber: mapField(analysis.cardNumber),
+                parallel: mapField(analysis.parallel),
+                variation: mapField(analysis.variation),
+                rookie: mapField(analysis.rookie),
+                autograph: mapField(analysis.autograph),
+                relic: mapField(analysis.relic),
+                patch: mapField(analysis.patch),
+                shortPrint: mapField(analysis.shortPrint),
+                serialNumber: mapField(analysis.serialNumber),
+                serialMaximum: mapField(analysis.serialMaximum),
+                visibleText: { value: [analysis.frontText?.value ? `Front: ${analysis.frontText.value}` : null, analysis.backText?.value ? `Back: ${analysis.backText.value}` : null].filter(Boolean).join('\n\n'), confidence: 1, source: 'Both' },
+                overallConfidence: analysis.confidence || 0,
+                warnings: (analysis.warnings || []).map(x => x.message)
+            };
+
+            renderExtraction(extraction);
+            results.innerHTML = payload.cached
+                ? '<div class="scan-match-empty"><strong>Using saved analysis result</strong></div>'
+                : '<div class="scan-match-empty"><strong>ChatGPT reanalysis complete.</strong><br>Local matching is refreshing.</div>';
+            await search(true);
+        } catch (error) {
+            results.innerHTML = `<div class="scan-match-empty"><strong>Identification unavailable.</strong><br>${error.message}</div>`;
+        } finally {
+            button.disabled = false;
+            button.textContent = 'Reanalyze with ChatGPT';
+        }
+    });
+
+    async function saveAiSettings() {
+        const payload = {
+            enableChatGptAnalysis: document.getElementById('settingEnableChatGpt').checked,
+            askBeforeUpload: document.getElementById('settingAskBeforeUpload').checked,
+            localAnalysisOnly: document.getElementById('settingLocalOnly').checked,
+            allowTextOnlyOnlineSearch: document.getElementById('settingAllowTextOnly').checked,
+            reuseCachedAnalysis: document.getElementById('settingReuseCache').checked,
+            visionModel: document.getElementById('settingModel').value || aiConfig.model,
+            timeoutSeconds: Number(document.getElementById('settingTimeout').value || aiConfig.timeoutSeconds),
+            maxRetries: Number(document.getElementById('settingRetries').value || aiConfig.maxRetries),
+            maxImageBytes: Number(document.getElementById('settingMaxBytes').value || 8388608)
+        };
+
+        const response = await fetch('@Url.Action("SaveScannerAiSettings", "Scanner")', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'RequestVerificationToken': token
+            },
+            body: JSON.stringify(payload)
+        });
+        const result = await response.json().catch(() => null);
+        if (!response.ok) throw new Error(result?.message || 'Settings could not be saved.');
+
+        aiConfig.enabled = payload.enableChatGptAnalysis;
+        aiConfig.askBeforeUpload = payload.askBeforeUpload;
+        aiConfig.localOnly = payload.localAnalysisOnly;
+        aiConfig.reuseCached = payload.reuseCachedAnalysis;
+        aiConfig.model = payload.visionModel;
+        aiConfig.timeoutSeconds = payload.timeoutSeconds;
+        aiConfig.maxRetries = payload.maxRetries;
+    }
+
+    async function testAiConnection() {
+        const form = new FormData();
+        form.append('__RequestVerificationToken', token);
+        const response = await fetch('@Url.Action("TestScannerAiConnection", "Scanner")', {
+            method: 'POST',
+            body: form
+        });
+        const result = await response.json().catch(() => null);
+        if (!response.ok) throw new Error(result?.message || 'Connection test failed.');
+        return result?.message || 'Connection succeeded.';
+    }
+
+    async function checkDuplicates() {
+        const duplicatePanel = document.getElementById('duplicatePanel');
+        duplicatePanel.innerHTML = '<div class="scan-match-empty">Checking for likely duplicates…</div>';
+        const response = await fetch('@Url.Action("CheckDuplicates", "Scanner")', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'RequestVerificationToken': token
+            },
+            body: JSON.stringify({
+                checklistCardId: selectedCandidate?.checklistItemId || null,
+                productId: selectedCandidate?.productId || null,
+                cardNumber: fields.cardNumber.value || null,
+                player: fields.subject.value || null,
+                parallel: selectedCandidate?.parallel || null,
+                variation: selectedCandidate?.variation || null,
+                frontFileName: frontInput.value || null,
+                backFileName: backInput.value || null,
+                pairId: scannerPairId || null,
+                pairState: document.getElementById('scannerPairState').value || null
+            })
+        });
+        const payload = await response.json();
+        if (!response.ok) throw new Error(payload?.message || 'Duplicate check failed.');
+
+        if (!payload?.warnings?.length) {
+            duplicatePanel.innerHTML = '<div class="scan-match-empty"><strong>No likely duplicate.</strong><br>You can continue as a separate physical copy.</div>';
+            return;
+        }
+
+        duplicatePanel.innerHTML = `
+            <div class="scan-analysis-header"><strong>Duplicate Review</strong></div>
+            <div class="scan-analysis-grid">
+                ${payload.warnings.map(x => `<div class="scan-analysis-field"><span>${x.category}</span><strong>${x.message}</strong><small>${x.isExactMatch ? 'Exact' : 'Possible'}${x.existingCardId ? ` · Card ${x.existingCardId}` : ''}</small></div>`).join('')}
+            </div>
+            <div class="scan-match-empty">Actions: Add another copy, Increase existing quantity, Open existing inventory card, Continue as separate physical copy, Cancel.</div>
+        `;
+    }
+
+    async function confirmSelectedCard() {
+        if (!selectedCandidate) {
+            alert('Select a candidate first.');
+            return;
+        }
+
+        const response = await fetch(`@Url.Action("ConfirmSelectedCandidate", "Scanner")?pairId=${encodeURIComponent(scannerPairId || (frontInput.value + '|' + (backInput.value || '')) )}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'RequestVerificationToken': token
+            },
+            body: JSON.stringify(selectedCandidate)
+        });
+        const payload = await response.json();
+        if (!response.ok) throw new Error(payload?.message || 'Candidate confirmation failed.');
+
+        document.getElementById('confirmedChecklistId').value = selectedCandidate.checklistItemId || '';
+        document.getElementById('scannerPairId').value = scannerPairId || (frontInput.value + '|' + (backInput.value || ''));
+        document.getElementById('scannerPairState').value = 'Awaiting Card Editor';
+        await checkDuplicates();
+        persistWorkflowState();
+    }
+
+    document.getElementById('confirmSelectedCard').addEventListener('click', async () => {
+        try {
+            await confirmSelectedCard();
+        } catch (error) {
+            document.getElementById('duplicatePanel').innerHTML = `<div class="scan-match-empty"><strong>Duplicate check failed.</strong><br>${error.message}</div>`;
+        }
+    });
+
+    document.getElementById('openCatalogCard').addEventListener('click', () => {
+        if (!selectedCandidate?.checklistItemId) return;
+        window.location.href = `/Checklists/Index?checklistItemId=${encodeURIComponent(selectedCandidate.checklistItemId)}`;
+    });
+
+    document.getElementById('refineSearch').addEventListener('click', () => search(true));
+    document.getElementById('saveUnmatchedDraft').addEventListener('click', () => {
+        document.getElementById('matchedChecklistId').value = '';
+        document.getElementById('confirmedChecklistId').value = '';
+        document.getElementById('scannerPairState').value = 'Unmatched draft';
+        document.getElementById('matchResults').innerHTML = '<div class="scan-match-empty"><strong>Unmatched draft ready.</strong><br>Review fields, add notes, then Save to keep this pending identification state.</div>';
+    });
+
+    document.getElementById('skipPair').addEventListener('click', () => {
+        document.getElementById('scannerPairState').value = 'Skipped';
+        document.getElementById('matchResults').innerHTML = '<div class="scan-match-empty">Pair skipped. It remains in queue until you process or remove it.</div>';
+    });
+
+    document.getElementById('saveAiSettings').addEventListener('click', async () => {
+        try {
+            await saveAiSettings();
+            document.getElementById('analysisPanel').innerHTML = '<div class="scan-match-empty">Scanner AI settings saved.</div>';
+        } catch (error) {
+            document.getElementById('analysisPanel').innerHTML = `<div class="scan-match-empty"><strong>Settings save failed.</strong><br>${error.message}</div>`;
+        }
+    });
+
+    document.getElementById('testAiConnection').addEventListener('click', async () => {
+        try {
+            const message = await testAiConnection();
+            document.getElementById('analysisPanel').innerHTML = `<div class="scan-match-empty">${message}</div>`;
+        } catch (error) {
+            document.getElementById('analysisPanel').innerHTML = `<div class="scan-match-empty"><strong>Connection test failed.</strong><br>${error.message}</div>`;
+        }
+    });
+
+    document.getElementById('searchMatches').addEventListener('click', () => search(false));
+    document.getElementById('searchFromFields').addEventListener('click', () => search(true));
+    document.getElementById('manualEntry').addEventListener('click', () => {
+        selectedCandidate = null;
+        document.getElementById('matchedInventoryId').value = '';
+        document.getElementById('matchedChecklistId').value = '';
+        document.getElementById('confirmedChecklistId').value = '';
+        document.getElementById('scannerPairState').value = 'Extraction complete';
+        document.querySelectorAll('.scan-match-card').forEach(x => x.classList.remove('selected'));
+        document.getElementById('matchResults').innerHTML = '<div class="scan-match-empty">Manual entry mode. Enter the details below and choose where to save the card.</div>';
+        fields.subject.focus();
+    });
+    document.getElementById('matchSearch').addEventListener('keydown', event => { if (event.key === 'Enter') { event.preventDefault(); search(false); } });
+    document.getElementById('clearMatch').addEventListener('click', () => {
+        selectedCandidate = null;
+        document.getElementById('matchedInventoryId').value = '';
+        document.getElementById('matchedChecklistId').value = '';
+        document.getElementById('confirmedChecklistId').value = '';
+        document.querySelectorAll('.scan-match-card').forEach(x => x.classList.remove('selected'));
+    });
+    document.getElementById('analyzePair').addEventListener('click', async () => {
+        try { await analyzePair(); } catch (error) { document.getElementById('analysisPanel').innerHTML = `<div class="scan-match-empty"><strong>Analysis failed.</strong><br>${error.message}</div>`; }
+    });
+
+    if (frontInput.value) {
+        const card = cards.find(x => x.dataset.file === frontInput.value); if (card) assign(card, 'front');
+    }
+    if (backInput.value) {
+        const card = cards.find(x => x.dataset.file === backInput.value); if (card) assign(card, 'back');
+    }
+
+    restoreWorkflowState();
+
+    ['change', 'input'].forEach(eventName => {
+        document.getElementById('scannerImportForm').addEventListener(eventName, () => persistWorkflowState());
+    });
+
+    window.addEventListener('beforeunload', () => persistWorkflowState());
+    setIdentifyEnabled(false);
+})();
+</script>
+}
+}

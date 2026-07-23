@@ -1,0 +1,4 @@
+@model IBSCardManager.Entities.Product
+@{ ViewData["Title"] = "Edit Set"; }
+<div class="page-heading"><div><h1>Edit Set</h1><p>Set details used by inventory and checklists.</p></div></div>
+<div class="module-card"><form method="post">@await Html.PartialAsync("_Form", Model)</form></div>

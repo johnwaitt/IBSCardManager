@@ -1,0 +1,20 @@
+CardManager Pro v2.0.0 - Set Editor and eBay Draft Foundation
+
+Added:
+- Spreadsheet-style Edit Set & eBay screen from My Collection.
+- Absolute quantity editing with inventory synchronization.
+- Inline checklist editing for player, team, position, subset, parallel, variation, serial number, print run and card flags.
+- Front and back stock-image URL fields.
+- Exact eBay sold and TCDB verification links; generic Google image search is not used on the new editor.
+- Grader, grade and certification fields.
+- eBay draft fields: SKU, title, description, category, condition, format, Best Offer, price, business policies and package measurements.
+- 80-character eBay title generator and live title counter.
+- Search, owned-only, missing-only, expandable detail rows and Ctrl+S.
+- EF Core migration: SetEditorAndEbayFields.
+
+Install:
+1. Back up the current project and database.
+2. Open the solution and restore packages.
+3. Run Update-Database from Package Manager Console.
+4. Rebuild and run.
+5. Open My Collection and click Edit set & eBay.

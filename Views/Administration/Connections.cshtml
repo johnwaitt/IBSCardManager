@@ -1,0 +1,90 @@
+@model IBSCardManager.Models.ProviderDashboardViewModel
+@{
+    ViewData["Title"] = "Connections";
+}
+<div class="container py-4">
+    <h1>Connections Dashboard</h1>
+    <p class="text-muted">Central management for external providers and readiness.</p>
+
+    @if (TempData["ConnectionsMessage"] is string message)
+    {
+        <div class="alert alert-info">@message</div>
+    }
+
+    @if (!Model.Providers.Any())
+    {
+        <div class="alert alert-warning">No providers are registered.</div>
+    }
+    else
+    {
+        <div class="table-responsive">
+            <table class="table table-sm table-striped align-middle">
+                <thead>
+                    <tr>
+                        <th>Provider</th>
+                        <th>Type</th>
+                        <th>Status</th>
+                        <th>Readiness</th>
+                        <th>Version</th>
+                        <th>Capabilities</th>
+                        <th>Last Test</th>
+                        <th>Last Success</th>
+                        <th>Last Failure</th>
+                        <th>Configuration</th>
+                        <th>Logs</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                @foreach (var provider in Model.Providers)
+                {
+                    var readinessClass = provider.Readiness switch
+                    {
+                        IBSCardManager.Models.ProviderReadiness.ProductionReady => "text-success",
+                        IBSCardManager.Models.ProviderReadiness.Limited => "text-warning",
+                        IBSCardManager.Models.ProviderReadiness.Beta => "text-info",
+                        IBSCardManager.Models.ProviderReadiness.ComingSoon => "text-secondary",
+                        IBSCardManager.Models.ProviderReadiness.Disabled => "text-muted",
+                        _ => "text-danger"
+                    };
+
+                    <tr>
+                        <td><strong>@provider.ProviderName</strong></td>
+                        <td>@provider.ProviderType</td>
+                        <td>@provider.Status</td>
+                        <td class="@readinessClass">@provider.Readiness</td>
+                        <td>@provider.Version</td>
+                        <td>@string.Join(", ", provider.Capabilities.Select(x => $"{x.Name}:{x.Availability}"))</td>
+                        <td>@(provider.LastTest?.ToLocalTime().ToString("g") ?? "Never")</td>
+                        <td>@(provider.LastSuccess?.ToLocalTime().ToString("g") ?? "Never")</td>
+                        <td>@(provider.LastFailure?.ToLocalTime().ToString("g") ?? "Never")</td>
+                        <td>@provider.ConfigurationSummary</td>
+                        <td>@provider.LogSummary</td>
+                        <td>
+                            <div class="d-flex gap-1 flex-wrap">
+                                <form asp-action="TestConnection" method="post" class="d-inline">
+                                    @Html.AntiForgeryToken()
+                                    <input type="hidden" name="providerName" value="@provider.ProviderName" />
+                                    <button type="submit" class="btn btn-sm btn-outline-primary">Test</button>
+                                </form>
+                                <form asp-action="EnableProvider" method="post" class="d-inline">
+                                    @Html.AntiForgeryToken()
+                                    <input type="hidden" name="providerName" value="@provider.ProviderName" />
+                                    <button type="submit" class="btn btn-sm btn-outline-success">Enable</button>
+                                </form>
+                                <form asp-action="DisableProvider" method="post" class="d-inline">
+                                    @Html.AntiForgeryToken()
+                                    <input type="hidden" name="providerName" value="@provider.ProviderName" />
+                                    <button type="submit" class="btn btn-sm btn-outline-secondary">Disable</button>
+                                </form>
+                            </div>
+                        </td>
+                    </tr>
+                }
+                </tbody>
+            </table>
+        </div>
+    }
+
+    <div class="small text-muted mt-3">Generated: @Model.GeneratedAt.ToLocalTime().ToString("g")</div>
+</div>

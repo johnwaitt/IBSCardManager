@@ -1,0 +1,22 @@
+@model IBSCardManager.Models.CardSearchViewModel
+@{ ViewData["Title"] = "Card Search"; }
+@section Styles { <link rel="stylesheet" href="~/css/card-search.css" asp-append-version="true" /> }
+<div class="search-page">
+<section class="search-hero"><div><span>LOCAL CATALOG + ONLINE LOOKUP</span><h1>Card Search</h1><p>Search inventory and imported checklists first, then open trusted online sources when the local catalog needs more data.</p></div></section>
+<form method="get" class="search-panel">
+<div class="universal"><input name="query" value="@Model.Query" placeholder="Example: 2025 Topps Chrome Paul Skenes #125 refractor" autofocus/><button>Search cards</button></div>
+<details><summary>Advanced filters</summary><div class="filters"><label>Player<input name="player" value="@Model.Player" /></label><label>Team<input name="team" value="@Model.Team" /></label><label>Year<input name="year" value="@Model.Year" type="number" /></label><label>Set / product<input name="set" value="@Model.Set" /></label><label>Card #<input name="cardNumber" value="@Model.CardNumber" /></label></div></details>
+</form>
+@if (Model.Results.Any()) {
+<div class="result-heading"><div><h2>@Model.Results.Count local matches</h2><p>Inventory records are shown before catalog-only records when scores match.</p></div></div>
+<div class="search-results">
+@foreach (var item in Model.Results) {
+<article class="search-result">
+<div class="result-image">@if (!string.IsNullOrWhiteSpace(item.ImageUrl)) { <img src="@item.ImageUrl" alt="@item.Player" /> } else { <span>No image</span> }</div>
+<div class="result-main"><div class="badges"><span class="source @item.Source.ToLowerInvariant()">@item.Source</span><span>@item.Score% match</span>@if(item.IsRookie){<span>RC</span>}@if(item.IsAutograph){<span>AUTO</span>}@if(item.IsRelic){<span>RELIC</span>}</div><h3>@item.Player</h3><p>@item.Year @item.Set · #@item.CardNumber</p><small>@item.Team @if(!string.IsNullOrWhiteSpace(item.Variety)){<text> · @item.Variety</text>}</small></div>
+<div class="result-actions">@if(item.Source=="Inventory"){<strong>Qty @item.Quantity</strong><a asp-controller="Cards" asp-action="Details" asp-route-id="@item.RecordId">Open inventory</a>}else{<strong>Catalog card</strong><a asp-controller="Scanner" asp-action="Index" asp-route-checklistItemId="@item.RecordId">Use in scanner</a>}</div>
+</article> }
+</div>
+} else if (!string.IsNullOrWhiteSpace(Model.Query) || Model.Year.HasValue || !string.IsNullOrWhiteSpace(Model.Player)) { <div class="empty-search"><h2>No local match yet</h2><p>Import the product checklist or use an online lookup below, then add the verified card to your catalog.</p></div> }
+@if (Model.OnlineLinks.Any()) { <section class="online-section"><div><h2>Online lookup</h2><p>These links open the provider in a new tab. CardManager Pro does not scrape or copy licensed data.</p></div><div class="online-grid">@foreach(var link in Model.OnlineLinks){<a href="@link.Url" target="_blank" rel="noopener"><strong>@link.Provider</strong><span>@link.Description</span><b>Open ↗</b></a>}</div></section> }
+</div>

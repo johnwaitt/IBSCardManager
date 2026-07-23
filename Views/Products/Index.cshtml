@@ -1,0 +1,8 @@
+@model IEnumerable<IBSCardManager.Entities.Product>
+@{ ViewData["Title"] = "Sets"; }
+<div class="page-heading"><div><h1>Sets</h1><p>Manage products and open their checklists.</p></div><a asp-action="Create" class="btn btn-primary">+ New Set</a></div>
+@if (TempData["Error"] is string error) { <div class="alert alert-danger">@error</div> }
+<form method="get" class="module-filter"><input name="search" value="@ViewBag.Search" placeholder="Search sets..."/><input name="year" value="@ViewBag.Year" type="number" placeholder="Year"/><button class="btn btn-dark">Search</button><a asp-action="Index" class="btn btn-outline-secondary">Clear</a></form>
+<div class="module-card"><table class="table align-middle"><thead><tr><th>Set</th><th>Sport</th><th>Release</th><th>Checklist</th><th>Status</th><th></th></tr></thead><tbody>
+@foreach (var item in Model) { <tr><td><strong>@item.DisplayName</strong><div class="text-muted small">@item.ProductName</div></td><td>@item.Sport?.SportName</td><td>@item.ReleaseDate?.ToString("MMM d, yyyy")</td><td><a asp-controller="Checklists" asp-action="Index" asp-route-productId="@item.ProductId">@item.ChecklistItems.Count cards</a></td><td>@(item.IsActive ? "Active" : "Inactive")</td><td class="text-end"><a asp-action="Edit" asp-route-id="@item.ProductId" class="btn btn-sm btn-outline-primary">Edit</a> <form asp-action="Delete" asp-route-id="@item.ProductId" method="post" class="d-inline" onsubmit="return confirm('Delete this set and its checklist?');"><button class="btn btn-sm btn-outline-danger">Delete</button></form></td></tr> }
+</tbody></table></div>

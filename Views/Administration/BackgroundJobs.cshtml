@@ -1,0 +1,26 @@
+@model IBSCardManager.Models.AdministrationBackgroundJobsViewModel
+@{ ViewData["Title"] = "Background Jobs"; }
+<div class="container py-4">
+    <h1>Background Jobs</h1>
+    <p class="text-muted">Queue monitor for AI, scanner, marketplace, pricing, images, backups, and catalog processing.</p>
+
+    <div class="table-responsive">
+        <table class="table table-sm table-striped">
+            <thead><tr><th>Queue</th><th>Status</th><th>Running</th><th>Waiting</th><th>Failed</th><th>Completed</th><th>Retry</th></tr></thead>
+            <tbody>
+            @foreach (var queue in Model.Queues)
+            {
+                <tr>
+                    <td>@queue.QueueName</td>
+                    <td>@queue.Status</td>
+                    <td>@queue.Running</td>
+                    <td>@queue.Waiting</td>
+                    <td>@queue.Failed</td>
+                    <td>@queue.Completed</td>
+                    <td>@(queue.RetrySupported ? "Supported" : "Unavailable")</td>
+                </tr>
+            }
+            </tbody>
+        </table>
+    </div>
+</div>

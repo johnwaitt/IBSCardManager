@@ -1,0 +1,28 @@
+CARDMANAGER PRO v1.1.0 - AI PAIR IDENTIFICATION + 2025 TOPPS CHROME BLACK BASE
+
+NEW
+- After accepting a front/back pair, click "Identify pair with ChatGPT".
+- The accepted images are sent to the OpenAI Responses API and suggested card fields populate on the right.
+- The app then searches the local inventory/checklist so the AI suggestion can be confirmed against your catalog.
+- Manual entry remains available when AI is unavailable or uncertain.
+- Checklists now include a one-click "Load 2025 Topps Chrome Black" action.
+- The bundled official base checklist contains 150 cards and opens directly in Add Set to Collection.
+- Enter Qty to add down the list and submit once to create inventory or increase existing quantities.
+- Each row includes stock-photo lookup and a field to paste an approved stock image URL.
+
+OPENAI SETUP
+Recommended: set the OPENAI_API_KEY environment variable or use .NET User Secrets.
+The app also contains an empty OpenAI:ApiKey setting, but do not commit a real key into source control.
+Default model: gpt-5-mini (change OpenAI:Model if needed).
+API usage is billed separately from a ChatGPT subscription.
+
+CHECKLIST SOURCE
+Official Topps 2025 Topps Chrome Black Baseball checklist PDF:
+https://www.topps.com/products/2025-topps-chrome%C2%AE-black-baseball-hobby-box
+The bundled quick-load list is the 150-card BASE checklist. Inserts/autographs remain importable through CSV/XLSX.
+
+DATABASE
+No migration is required.
+
+IMPORTANT
+This release was not compile-tested because the .NET SDK is unavailable in the build environment.

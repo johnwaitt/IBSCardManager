@@ -1,0 +1,80 @@
+@model IBSCardManager.Models.CollectionAnalyticsDashboardViewModel
+@{
+    ViewData["Title"] = "Collection Analytics";
+}
+
+<div class="container py-4">
+    <h1>Collection Analytics</h1>
+
+    @if (TempData["AnalyticsMessage"] is string message)
+    {
+        <div class="alert alert-info">@message</div>
+    }
+
+    <div class="mb-3 d-flex gap-2 flex-wrap">
+        <a class="btn btn-outline-secondary" href="/Analytics?range=7d">7 days</a>
+        <a class="btn btn-outline-secondary" href="/Analytics?range=30d">30 days</a>
+        <a class="btn btn-outline-secondary" href="/Analytics?range=90d">90 days</a>
+        <a class="btn btn-outline-secondary" href="/Analytics?range=1y">1 year</a>
+        <a class="btn btn-outline-primary" href="/Analytics?range=all">All time</a>
+        <form asp-action="Snapshot" method="post" class="d-inline">
+            @Html.AntiForgeryToken()
+            <button type="submit" class="btn btn-primary">Create manual snapshot</button>
+        </form>
+    </div>
+
+    <div class="row g-3">
+        <div class="col-md-4"><div class="card p-3"><strong>Total value</strong><div>@Model.TotalCollectionValue.ToString("C0")</div></div></div>
+        <div class="col-md-4"><div class="card p-3"><strong>Total cost basis</strong><div>@Model.TotalCostBasis.ToString("C0")</div></div></div>
+        <div class="col-md-4"><div class="card p-3"><strong>Unrealized gain/loss</strong><div>@Model.UnrealizedGainLoss.ToString("C0")</div></div></div>
+        <div class="col-md-4"><div class="card p-3"><strong>Realized profit</strong><div>@Model.RealizedProfit.ToString("C0")</div></div></div>
+        <div class="col-md-4"><div class="card p-3"><strong>Total cards</strong><div>@Model.TotalCards</div></div></div>
+        <div class="col-md-4"><div class="card p-3"><strong>Unique cards</strong><div>@Model.UniqueCards</div></div></div>
+        <div class="col-md-4"><div class="card p-3"><strong>Raw vs graded value</strong><div>@Model.RawValue.ToString("C0") / @Model.GradedValue.ToString("C0")</div></div></div>
+        <div class="col-md-4"><div class="card p-3"><strong>Listed vs unlisted value</strong><div>@Model.ListedValue.ToString("C0") / @Model.UnlistedValue.ToString("C0")</div></div></div>
+        <div class="col-md-4"><div class="card p-3"><strong>High vs low confidence</strong><div>@Model.HighConfidenceValue.ToString("C0") / @Model.LowConfidenceValue.ToString("C0")</div></div></div>
+        <div class="col-md-3"><div class="card p-3"><strong>Need pricing</strong><div>@Model.CardsNeedingPricing</div></div></div>
+        <div class="col-md-3"><div class="card p-3"><strong>Stale pricing</strong><div>@Model.CardsWithStalePricing</div></div></div>
+        <div class="col-md-3"><div class="card p-3"><strong>Ready to list</strong><div>@Model.CardsReadyToList</div></div></div>
+        <div class="col-md-3"><div class="card p-3"><strong>Strong grading</strong><div>@Model.StrongGradingCandidates</div></div></div>
+        <div class="col-md-6"><div class="card p-3"><strong>Recent sales</strong><div>@Model.RecentSales</div></div></div>
+        <div class="col-md-6"><div class="card p-3"><strong>Recent acquisitions</strong><div>@Model.RecentAcquisitions</div></div></div>
+    </div>
+
+    <h2 class="mt-4">Value History</h2>
+    @if (Model.History.Count == 0)
+    {
+        <p class="text-muted">No snapshots yet.</p>
+    }
+    else
+    {
+        <div class="table-responsive">
+            <table class="table table-sm table-striped">
+                <thead><tr><th>Date</th><th>Total Value</th><th>Cost Basis</th><th>Unrealized</th><th>Realized</th><th>Raw</th><th>Graded</th></tr></thead>
+                <tbody>
+                @foreach (var point in Model.History.OrderByDescending(x => x.SnapshotDate).Take(60))
+                {
+                    <tr>
+                        <td>@point.SnapshotDate.ToLocalTime().ToString("g")</td>
+                        <td>@point.TotalEstimatedValue.ToString("C0")</td>
+                        <td>@point.TotalCostBasis.ToString("C0")</td>
+                        <td>@point.UnrealizedGainLoss.ToString("C0")</td>
+                        <td>@point.RealizedProfit.ToString("C0")</td>
+                        <td>@point.RawValue.ToString("C0")</td>
+                        <td>@point.GradedValue.ToString("C0")</td>
+                    </tr>
+                }
+                </tbody>
+            </table>
+        </div>
+    }
+
+    <div class="mt-3 d-flex flex-wrap gap-2">
+        <a class="btn btn-outline-primary" href="/Analytics/Report?code=mostvaluable">Most Valuable Cards</a>
+        <a class="btn btn-outline-primary" href="/Analytics/Report?code=highestroi">Highest ROI</a>
+        <a class="btn btn-outline-primary" href="/Analytics/Recommendations">Smart Recommendations</a>
+        <a class="btn btn-outline-primary" href="/Analytics/Concentration?dimension=player">Concentration</a>
+        <a class="btn btn-outline-primary" href="/Analytics/Duplicates">Duplicate Analysis</a>
+        <a class="btn btn-outline-primary" href="/Analytics/DataQuality">Data Quality</a>
+    </div>
+</div>

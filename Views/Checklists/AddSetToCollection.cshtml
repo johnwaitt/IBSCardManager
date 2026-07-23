@@ -1,0 +1,195 @@
+@model IBSCardManager.Models.CollectionBuilderViewModel
+@{
+    ViewData["Title"] = "Add Set to Collection";
+}
+
+@section Styles {
+    <link rel="stylesheet" href="~/css/set-builder.css" asp-append-version="true" />
+}
+
+<div class="set-builder-page" id="setBuilder">
+    <div class="page-heading">
+        <div>
+            <span class="eyebrow">COMPLETE SET WORKFLOW</span>
+            <h1>@Model.ProductName</h1>
+            <p>Enter quantities down the column, review stock images, and add the selected cards to inventory.</p>
+        </div>
+        <a asp-action="Index" asp-route-productId="@Model.ProductId" class="btn btn-outline-secondary"><i class="bi bi-arrow-left me-1" aria-hidden="true"></i>Back to checklist</a>
+    </div>
+
+    <section class="set-builder-summary card">
+        <div class="d-flex flex-wrap gap-2 align-items-center justify-content-between">
+            <div>
+                <div class="text-uppercase text-muted small">Selected set</div>
+                <h2 class="h5 mb-1">@Model.ProductName</h2>
+                <div class="small text-muted">@Model.Year · @Model.Manufacturer · @Model.Brand · @Model.ProductEdition</div>
+                <div class="small mt-1"><strong>Checklist status:</strong> <span class="badge text-bg-secondary">@Model.ChecklistStatusLabel</span></div>
+                @if (!string.IsNullOrWhiteSpace(Model.LastImportSource))
+                {
+                    <div class="small text-muted">Last import source: @Model.LastImportSource</div>
+                }
+            </div>
+            <div class="d-flex gap-2 flex-wrap">
+                <a asp-action="EditSet" asp-route-productId="@Model.ProductId" class="btn btn-outline-primary"><i class="bi bi-folder2-open me-1" aria-hidden="true"></i>Open Set Detail</a>
+                <a asp-action="Import" asp-route-productId="@Model.ProductId" class="btn btn-outline-secondary"><i class="bi bi-file-earmark-arrow-up me-1" aria-hidden="true"></i>Import checklist</a>
+                <a asp-action="FindChecklistOnline" asp-route-productId="@Model.ProductId" class="btn btn-outline-dark"><i class="bi bi-globe me-1" aria-hidden="true"></i>Find Checklist Online</a>
+                <a asp-action="Index" asp-route-productId="@Model.ProductId" class="btn btn-outline-secondary"><i class="bi bi-arrow-counterclockwise me-1" aria-hidden="true"></i>Return to checklist</a>
+            </div>
+        </div>
+        @if (Model.HasChecklistRows)
+        {
+            <div class="set-builder-metrics mt-3">
+                <div><span>Total checklist cards</span><strong>@Model.TotalChecklistCards</strong></div>
+                <div><span>Unique owned</span><strong>@Model.UniqueOwned</strong></div>
+                <div><span>Total pieces owned</span><strong>@Model.TotalPiecesOwned</strong></div>
+                <div><span>Missing</span><strong>@Model.MissingCount</strong></div>
+                <div><span>Completion</span><strong>@Model.CompletionPercent.ToString("N1")%</strong></div>
+            </div>
+        }
+        else
+        {
+            <div class="set-builder-metrics mt-3">
+                <div><span>Total checklist cards</span><strong>@Model.TotalChecklistCards</strong></div>
+                <div><span>Checklist data</span><strong>Not loaded</strong></div>
+            </div>
+        }
+    </section>
+
+    @if (!string.IsNullOrWhiteSpace(Model.ErrorMessage))
+    {
+        <div class="alert alert-danger">@Model.ErrorMessage <button type="button" class="btn btn-sm btn-outline-danger ms-2" onclick="window.location.reload()">Retry</button></div>
+    }
+    else if (!Model.HasChecklistRows)
+    {
+        <div class="empty-state">
+            <span class="empty-state-icon" aria-hidden="true"><i class="bi bi-inbox"></i></span>
+            <strong>This set exists, but its checklist has not been loaded.</strong>
+            <p>Import or create checklist rows first, then return here to build the set into inventory.</p>
+            <div class="d-flex gap-2 flex-wrap justify-content-center">
+                <a asp-action="Import" asp-route-productId="@Model.ProductId" class="btn btn-primary"><i class="bi bi-file-earmark-arrow-up me-1" aria-hidden="true"></i>Import CSV</a>
+                <a asp-action="PasteChecklist" asp-route-productId="@Model.ProductId" class="btn btn-outline-primary"><i class="bi bi-clipboard-data me-1" aria-hidden="true"></i>Paste Checklist</a>
+                <a asp-action="FindChecklistOnline" asp-route-productId="@Model.ProductId" class="btn btn-outline-dark"><i class="bi bi-globe me-1" aria-hidden="true"></i>Find Checklist Online</a>
+                <a asp-action="Create" asp-route-productId="@Model.ProductId" class="btn btn-outline-primary"><i class="bi bi-plus-circle me-1" aria-hidden="true"></i>Add Checklist Card</a>
+                <a asp-action="Index" asp-route-productId="@Model.ProductId" class="btn btn-outline-secondary"><i class="bi bi-arrow-left me-1" aria-hidden="true"></i>Return to Sets</a>
+            </div>
+        </div>
+    }
+    else
+    {
+        <div class="set-builder-toolbar">
+            <label class="search-box"><i class="bi bi-search" aria-hidden="true"></i><input id="setSearch" type="search" placeholder="Search player, team, subset or card number..." /></label>
+            <div class="btn-group" role="group" aria-label="Set quantity actions">
+                <button type="button" class="btn btn-outline-primary" id="setAllOne"><i class="bi bi-1-circle me-1" aria-hidden="true"></i>Set shown to 1</button>
+                <button type="button" class="btn btn-outline-primary" id="setAllRowsOne"><i class="bi bi-collection me-1" aria-hidden="true"></i>Set all checklist rows to 1</button>
+            </div>
+            <button type="button" class="btn btn-outline-secondary" id="clearQty"><i class="bi bi-eraser me-1" aria-hidden="true"></i>Clear quantities</button>
+            <label class="form-check"><input class="form-check-input" type="checkbox" id="missingOnly" /><span class="form-check-label"><i class="bi bi-dash-circle me-1" aria-hidden="true"></i>Missing only</span></label>
+            <span class="set-builder-count"><strong id="selectedPieces">0</strong> pieces to add</span>
+        </div>
+
+        <form method="post" asp-action="AddSetToCollection" id="setBuilderForm">
+            @Html.AntiForgeryToken()
+            <input asp-for="ProductId" type="hidden" />
+            <input asp-for="ProductName" type="hidden" />
+
+            <div class="set-builder-table-wrap">
+                <table class="table align-middle set-builder-table">
+                    <thead>
+                        <tr>
+                            <th>Image</th>
+                            <th>Card #</th>
+                            <th>Player</th>
+                            <th>Team / Subject</th>
+                            <th>Checklist Section</th>
+                            <th>Parallel</th>
+                            <th>Variation</th>
+                            <th>Rookie</th>
+                            <th>Autograph</th>
+                            <th>Relic</th>
+                            <th class="sticky-owned">Owned</th>
+                            <th class="sticky-qty">Qty to Add</th>
+                            <th>Image Choice</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                    @for (var i = 0; i < Model.Rows.Count; i++)
+                    {
+                        var row = Model.Rows[i];
+                        var search = $"{row.CardNumber} {row.Subject} {row.Team} {row.ChecklistSection} {row.Parallel} {row.Variation}".ToLowerInvariant();
+                        var exactQuery = $"{Model.ProductName} #{row.CardNumber} {row.Subject} {row.Team} {row.ChecklistSection} {row.Parallel} {row.Variation}";
+                        var stockSearchUrl = $"https://www.ebay.com/sch/i.html?_nkw={Uri.EscapeDataString(exactQuery)}&LH_Sold=1&LH_Complete=1";
+                        <tr data-search="@search" data-owned="@row.ExistingQuantity" data-checklist-id="@row.ChecklistItemId" class="set-builder-row">
+                            <td class="image-cell">
+                                <button type="button" class="image-preview-button" title="Open image">
+                                    @if (!string.IsNullOrWhiteSpace(row.ReferenceImageUrl))
+                                    {
+                                        <img src="@row.ReferenceImageUrl" alt="@row.Subject reference image" loading="lazy" data-zoom-src="@row.ReferenceImageUrl" />
+                                    }
+                                    else
+                                    {
+                                        <img src="~/images/placeholder-card.svg" alt="Missing image" loading="lazy" data-zoom-src="/images/placeholder-card.svg" />
+                                    }
+                                </button>
+                            </td>
+                            <td><strong>@row.CardNumber</strong></td>
+                            <td>@row.Subject</td>
+                            <td>@(row.TeamSummary ?? row.Team ?? "—")</td>
+                            <td>@(row.ChecklistSection ?? "Base")</td>
+                            <td>@(row.Parallel ?? "—")</td>
+                            <td>@(row.Variation ?? "—")</td>
+                            <td>@(row.IsRookie ? "RC" : "")</td>
+                            <td>@(row.IsAutograph ? "Auto" : "")</td>
+                            <td>@(row.IsRelic ? "Relic" : "")</td>
+                            <td class="sticky-owned"><span class="owned-pill">@row.ExistingQuantity</span></td>
+                            <td class="sticky-qty">
+                                <input asp-for="Rows[i].ChecklistItemId" type="hidden" />
+                                <input asp-for="Rows[i].ProductId" type="hidden" />
+                                <input asp-for="Rows[i].ChecklistSectionId" type="hidden" />
+                                <input asp-for="Rows[i].CardNumber" type="hidden" />
+                                <input asp-for="Rows[i].Subject" type="hidden" />
+                                <input asp-for="Rows[i].Team" type="hidden" />
+                                <input asp-for="Rows[i].TeamSummary" type="hidden" />
+                                <input asp-for="Rows[i].ChecklistSection" type="hidden" />
+                                <input asp-for="Rows[i].Parallel" type="hidden" />
+                                <input asp-for="Rows[i].Variation" type="hidden" />
+                                <input asp-for="Rows[i].IsRookie" type="hidden" />
+                                <input asp-for="Rows[i].IsAutograph" type="hidden" />
+                                <input asp-for="Rows[i].IsRelic" type="hidden" />
+                                <input asp-for="Rows[i].ReferenceImageUrl" type="hidden" />
+                                <input asp-for="Rows[i].StockImageUrl" type="hidden" />
+                                <input asp-for="Rows[i].ImageChoice" type="hidden" />
+                                <input asp-for="Rows[i].ExistingQuantity" type="hidden" />
+                                <input asp-for="Rows[i].QuantityToAdd" class="form-control qty-input" type="number" min="0" max="999" inputmode="numeric" />
+                            </td>
+                            <td>
+                                <label class="form-check form-switch">
+                                    <input asp-for="Rows[i].UseStockImage" class="form-check-input" />
+                                    <span class="form-check-label">Use reference image</span>
+                                </label>
+                                <div class="image-choice text-muted small">
+                                    <span>@row.ImageChoice</span>
+                                </div>
+                                <a class="small d-block" target="_blank" rel="noopener" href="@stockSearchUrl">Exact eBay sold search</a>
+                            </td>
+                        </tr>
+                    }
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="set-builder-submit">
+                <span>Tip: press Enter or the down arrow to move to the next quantity field.</span>
+                <button class="btn btn-primary btn-lg" id="submitSetBuilder"><i class="bi bi-plus-circle me-1" aria-hidden="true"></i>Add selected quantities to inventory</button>
+            </div>
+        </form>
+    }
+</div>
+
+<div class="set-image-modal" id="setImageModal" hidden>
+    <button type="button" id="setImageClose" aria-label="Close" title="Close"><i class="bi bi-x-lg" aria-hidden="true"></i></button>
+    <img id="setImageLarge" alt="Stock card preview" />
+</div>
+
+@section Scripts {
+    <script src="~/js/set-builder.js" asp-append-version="true"></script>
+}

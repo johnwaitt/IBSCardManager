@@ -1,0 +1,94 @@
+@model IBSCardManager.Models.CollectionExplorerViewModel
+@{
+    ViewData["Title"] = Model.Title;
+}
+
+@section Styles {
+    <link rel="stylesheet" href="~/css/collection-explorer.css" asp-append-version="true" />
+}
+
+<div class="explorer-page">
+    <header class="explorer-hero">
+        <div>
+            <span class="eyebrow">COLLECTION EXPLORER</span>
+            <h1>@Model.Title</h1>
+            <p>@Model.Description</p>
+        </div>
+        <form method="get" class="explorer-search-form">
+            <input type="hidden" name="mode" value="@Model.Mode" />
+            <input type="search" name="search" value="@Model.Search" placeholder="Search collection..." />
+            <button type="submit" class="btn btn-primary">Search</button>
+        </form>
+    </header>
+
+    <nav class="explorer-mode-nav" aria-label="Explorer modes">
+        @foreach (var mode in Model.Modes)
+        {
+            <a href="@mode.Url" class="explorer-mode-link @(mode.IsActive ? "active" : string.Empty)">@mode.DisplayName</a>
+        }
+    </nav>
+
+    <section class="explorer-summary-strip">
+        <div><strong>@Model.TotalCount.ToString("N0")</strong><span>results</span></div>
+        <div><strong>@Model.Page.ToString("N0")</strong><span>page</span></div>
+        <div><strong>@Model.PageSize.ToString("N0")</strong><span>page size</span></div>
+        <div><strong>@(Model.IsUnavailable ? "Unavailable" : "Ready")</strong><span>state</span></div>
+    </section>
+
+    @if (Model.Filters.Count > 0)
+    {
+        <section class="explorer-filters">
+            @foreach (var filter in Model.Filters)
+            {
+                <span class="explorer-filter-pill @(filter.IsActive ? "active" : string.Empty)">
+                    @filter.Name: @filter.Value
+                </span>
+            }
+        </section>
+    }
+
+    @if (Model.IsUnavailable)
+    {
+        <div class="explorer-empty-state">
+            <strong>Unavailable</strong>
+            <p>@Model.EmptyMessage</p>
+        </div>
+    }
+    else if (!string.IsNullOrWhiteSpace(Model.ErrorMessage))
+    {
+        <div class="explorer-empty-state error">
+            <strong>Error</strong>
+            <p>@Model.ErrorMessage</p>
+        </div>
+    }
+    else if (Model.Items.Count == 0)
+    {
+        <div class="explorer-empty-state">
+            <strong>No cards found</strong>
+            <p>@Model.EmptyMessage</p>
+        </div>
+    }
+    else
+    {
+        <div class="explorer-card-grid">
+            @foreach (var item in Model.Items)
+            {
+                <partial name="_CollectionItemCard" model="item" />
+            }
+        </div>
+    }
+
+    <footer class="explorer-paging">
+        <span>Showing page @Model.Page of @(Model.TotalPages == 0 ? 1 : Model.TotalPages)</span>
+        <div class="explorer-paging-actions">
+            @if (Model.HasPreviousPage)
+            {
+                <a class="btn btn-outline-secondary" href="@Url.Action("Index", new { mode = Model.Mode, search = Model.Search, page = Model.Page - 1, pageSize = Model.PageSize, sort = Model.Sort })">Previous</a>
+            }
+            @if (Model.HasNextPage)
+            {
+                <a class="btn btn-outline-secondary" href="@Url.Action("Index", new { mode = Model.Mode, search = Model.Search, page = Model.Page + 1, pageSize = Model.PageSize, sort = Model.Sort })">Next</a>
+            }
+        </div>
+    </footer>
+</div>

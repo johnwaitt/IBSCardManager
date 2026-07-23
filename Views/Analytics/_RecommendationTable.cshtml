@@ -1,0 +1,60 @@
+@model IReadOnlyList<IBSCardManager.Models.AnalyticsCardScoreViewModel>
+
+<div class="table-responsive">
+    <table class="table table-sm table-striped">
+        <thead>
+            <tr>
+                <th>Card</th>
+                <th>Recommendation</th>
+                <th>Score</th>
+                <th>Confidence</th>
+                <th>Impact</th>
+                <th>Expected Graded</th>
+                <th>Break-even</th>
+                <th>Best Grader</th>
+                <th>Reasons</th>
+                <th>Risks</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+        @foreach (var row in Model)
+        {
+            <tr>
+                <td>
+                    <div>@row.Title</div>
+                    <small class="text-muted">@row.SetName #@row.CardNumber</small>
+                </td>
+                <td>@row.Recommendation</td>
+                <td>@row.Score.ToString("N1")</td>
+                <td>@row.Confidence.ToString("N1")%</td>
+                <td>@row.UnrealizedGainLoss.ToString("C0")</td>
+                <td>@row.ExpectedGradedValue.ToString("C0") (@row.ExpectedNetProfit.ToString("C0"), @row.ExpectedRoiPercent.ToString("N1")%)</td>
+                <td>@row.BreakEvenGrade (@row.MinTopGradeProbability.ToString("N1")%)</td>
+                <td>@row.BestGrader</td>
+                <td><small>@row.Reason</small></td>
+                <td><small>@row.Risks</small></td>
+                <td>
+                    <form asp-controller="Analytics" asp-action="Accept" method="post" class="mb-1">
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" name="id" value="@row.CardId" />
+                        <button class="btn btn-sm btn-outline-success" type="submit">Accept</button>
+                    </form>
+                    <form asp-controller="Analytics" asp-action="Dismiss" method="post" class="mb-1">
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" name="id" value="@row.CardId" />
+                        <button class="btn btn-sm btn-outline-danger" type="submit">Dismiss</button>
+                    </form>
+                    <form asp-controller="Analytics" asp-action="Snooze" method="post" class="mb-1">
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" name="id" value="@row.CardId" />
+                        <input type="hidden" name="days" value="14" />
+                        <button class="btn btn-sm btn-outline-secondary" type="submit">Snooze</button>
+                    </form>
+                    <a class="btn btn-sm btn-outline-primary" href="/Cards/Details/@row.CardId">Open Card</a>
+                </td>
+            </tr>
+        }
+        </tbody>
+    </table>
+</div>

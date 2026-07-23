@@ -1,0 +1,12 @@
+@{
+    ViewData["Title"] = "About";
+    var version = ViewData["Version"]?.ToString() ?? "unknown";
+    var informationalVersion = ViewData["InformationalVersion"]?.ToString() ?? "unknown";
+}
+
+<div class="container py-4">
+    <h1>@ViewData["Title"]</h1>
+    <p>IBS Baseball Card Manager</p>
+    <p><strong>Application Version:</strong> v@version</p>
+    <p><strong>Build:</strong> @informationalVersion</p>
+</div>

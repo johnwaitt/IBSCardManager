@@ -1,0 +1,20 @@
+CardManagerPro v0.6.0 update
+
+Included in this build:
+- Scan Inbox full-screen zoom with mouse-wheel zoom and drag-to-pan.
+- Scan thumbnails show review guidance for player, year, set and card number.
+- Choose accepted scan or stock image as the primary inventory image.
+- The accepted scan remains attached even when stock is the preferred display image.
+- Checklist CSV import can include Stock Image URL.
+- Checklist import can upload multiple JPG/PNG/WEBP stock image files named by card number.
+- Complete-set collection builder with search, missing-only filter, keyboard quantity entry and bulk inventory creation.
+- Existing raw inventory quantities are increased instead of creating unnecessary duplicates.
+- Inventory thumbnails honor the selected scan/stock image preference.
+- Version badge updated to v0.6.0.
+
+Database:
+Run Update-Database in Visual Studio Package Manager Console after replacing the project.
+Migration: 20260719173000_AddImageSourcePreference
+
+Build verification:
+The source was reviewed and packaged in the ChatGPT environment. The .NET SDK is not installed in that environment, so dotnet build could not be executed there. Rebuild the solution in Visual Studio after applying the migration.

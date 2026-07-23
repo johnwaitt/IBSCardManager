@@ -1,0 +1,96 @@
+@model IBSCardManager.Models.KnowledgeRecordDetailViewModel
+@{
+    ViewData["Title"] = "Knowledge Record";
+}
+
+<div class="container py-4">
+    <h1>Knowledge Record</h1>
+
+    <div class="row g-3 mb-4">
+        <div class="col-md-6"><div class="card p-3"><strong>Subject</strong><div>@Model.Record.SubjectType / @Model.Record.SubjectStableId</div></div></div>
+        <div class="col-md-6"><div class="card p-3"><strong>Knowledge Type</strong><div>@Model.Record.KnowledgeType</div></div></div>
+        <div class="col-md-6"><div class="card p-3"><strong>Statement</strong><div>@Model.Record.StatementKey = @Model.Record.StatementValue</div></div></div>
+        <div class="col-md-6"><div class="card p-3"><strong>Confidence</strong><div>@Model.Record.ConfidenceScore.ToString("N2")</div></div></div>
+        <div class="col-md-6"><div class="card p-3"><strong>Verification</strong><div>@Model.Record.VerificationLevel</div></div></div>
+        <div class="col-md-6"><div class="card p-3"><strong>Model / Rule Version</strong><div>@(Model.Record.ModelVersion ?? "unknown") / @(Model.Record.RuleVersion ?? "unknown")</div></div></div>
+        <div class="col-md-6"><div class="card p-3"><strong>User Confirmations</strong><div>@Model.Record.UserConfirmationCount</div></div></div>
+        <div class="col-md-6"><div class="card p-3"><strong>User Corrections</strong><div>@Model.Record.UserCorrectionCount</div></div></div>
+    </div>
+
+    <h2>Supporting Evidence</h2>
+    @if (!Model.SupportingEvidence.Any())
+    {
+        <p class="text-muted">No supporting evidence.</p>
+    }
+    else
+    {
+        <ul>
+            @foreach (var evidence in Model.SupportingEvidence)
+            {
+                <li><strong>@evidence.EvidenceType</strong> - @evidence.EvidenceSummary (@evidence.ConfidenceContribution.ToString("N2"))</li>
+            }
+        </ul>
+    }
+
+    <h2>Contradicting Evidence</h2>
+    @if (!Model.ContradictingEvidence.Any())
+    {
+        <p class="text-muted">No contradicting evidence.</p>
+    }
+    else
+    {
+        <ul>
+            @foreach (var evidence in Model.ContradictingEvidence)
+            {
+                <li><strong>@evidence.EvidenceType</strong> - @evidence.EvidenceSummary (@evidence.ConfidenceContribution.ToString("N2"))</li>
+            }
+        </ul>
+    }
+
+    <h2>Decision History</h2>
+    @if (!Model.DecisionHistory.Any())
+    {
+        <p class="text-muted">No decisions recorded.</p>
+    }
+    else
+    {
+        <div class="table-responsive">
+            <table class="table table-sm table-striped">
+                <thead><tr><th>When</th><th>Type</th><th>Status</th><th>Selected</th><th>Confidence</th><th>Explanation</th></tr></thead>
+                <tbody>
+                @foreach (var decision in Model.DecisionHistory)
+                {
+                    <tr>
+                        <td>@decision.CreatedAt.ToLocalTime().ToString("g")</td>
+                        <td>@decision.DecisionType</td>
+                        <td>@decision.DecisionStatus</td>
+                        <td>@decision.SelectedOption</td>
+                        <td>@decision.ConfidenceScore.ToString("N2")</td>
+                        <td>@decision.ExplanationSummary</td>
+                    </tr>
+                }
+                </tbody>
+            </table>
+        </div>
+    }
+
+    <h2>Related Records</h2>
+    <p><strong>Inventory:</strong> @(Model.RelatedInventoryRecords.Any() ? string.Join(", ", Model.RelatedInventoryRecords) : "None")</p>
+    <p><strong>Scanner Sessions:</strong> @(Model.RelatedScannerSessions.Any() ? string.Join(", ", Model.RelatedScannerSessions) : "None")</p>
+    <p><strong>Pricing Research:</strong> @(Model.RelatedPricingResearch.Any() ? string.Join(", ", Model.RelatedPricingResearch) : "None")</p>
+
+    <h2>Audit History</h2>
+    @if (!Model.AuditHistory.Any())
+    {
+        <p class="text-muted">No audit entries.</p>
+    }
+    else
+    {
+        <ul>
+            @foreach (var entry in Model.AuditHistory)
+            {
+                <li>@entry.CreatedAt.ToLocalTime().ToString("g") - @entry.OperationType - @entry.OperationResult</li>
+            }
+        </ul>
+    }
+</div>

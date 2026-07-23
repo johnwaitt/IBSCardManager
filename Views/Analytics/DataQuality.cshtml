@@ -1,0 +1,25 @@
+@model IReadOnlyList<IBSCardManager.Models.DataQualityIssueViewModel>
+@{
+    ViewData["Title"] = "Data Quality";
+}
+
+<div class="container py-4">
+    <h1>Data Quality</h1>
+    <a class="btn btn-outline-primary mb-3" href="/Analytics/Export?kind=quality&format=csv">Export CSV</a>
+    <div class="table-responsive">
+        <table class="table table-sm table-striped">
+            <thead><tr><th>Card</th><th>Score</th><th>Class</th><th>Missing Fields</th></tr></thead>
+            <tbody>
+            @foreach (var row in Model)
+            {
+                <tr>
+                    <td>@row.CardIdentity</td>
+                    <td>@row.Score.ToString("N1")</td>
+                    <td>@row.Classification</td>
+                    <td>@string.Join(", ", row.MissingFields)</td>
+                </tr>
+            }
+            </tbody>
+        </table>
+    </div>
+</div>

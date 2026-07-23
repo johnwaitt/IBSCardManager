@@ -1,0 +1,26 @@
+@model IReadOnlyList<IBSCardManager.Models.DuplicateAnalyticsRowViewModel>
+@{
+    ViewData["Title"] = "Duplicate Analytics";
+}
+
+<div class="container py-4">
+    <h1>Duplicate Analytics</h1>
+    <a class="btn btn-outline-primary mb-3" href="/Analytics/Export?kind=duplicates&format=csv">Export CSV</a>
+    <div class="table-responsive">
+        <table class="table table-sm table-striped">
+            <thead><tr><th>Group</th><th>Copies</th><th>Raw</th><th>Graded</th><th>Recommendation</th></tr></thead>
+            <tbody>
+            @foreach (var row in Model)
+            {
+                <tr>
+                    <td>@row.GroupKey</td>
+                    <td>@row.Copies</td>
+                    <td>@row.RawCopies</td>
+                    <td>@row.GradedCopies</td>
+                    <td>@row.Recommendation</td>
+                </tr>
+            }
+            </tbody>
+        </table>
+    </div>
+</div>

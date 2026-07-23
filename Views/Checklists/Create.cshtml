@@ -1,0 +1,3 @@
+@model IBSCardManager.Entities.ChecklistItem
+@{ ViewData["Title"] = "Create Checklist Card"; }
+<div class="page-heading"><div><h1>Create Checklist Card</h1><p>Maintain card details for automatic inventory entry.</p></div></div><div class="module-card"><form method="post">@await Html.PartialAsync("_Form", Model)</form></div>

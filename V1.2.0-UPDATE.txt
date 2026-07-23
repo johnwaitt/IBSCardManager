@@ -1,0 +1,16 @@
+CardManager Pro v1.2.0 - Collection Manager + TCDB Reference Search
+
+Added:
+- My Collection navigation module.
+- Set cards with checklist count, unique cards owned, duplicates/pieces, missing cards, and completion percentage.
+- One-click quantity entry for any imported checklist.
+- TCDB reference-search links from the Collection screen and Scanner workspace.
+- Scanner TCDB search uses the entered year, set, player, team, card number, and variation.
+- No automated scraping or copying of TCDB data.
+
+Database:
+- No migration required.
+
+Important:
+- TCDB search opens a normal browser search and remains a manual reference workflow.
+- Import official or user-owned CSV/XLSX checklists into the local catalog, then enter quantities from My Collection.

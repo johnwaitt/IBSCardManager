@@ -1,0 +1,73 @@
+@model IBSCardManager.Models.KnowledgeReviewQueueViewModel
+@{
+    ViewData["Title"] = "Knowledge Review Queue";
+    var totalPages = Model.PageSize <= 0 ? 1 : (int)Math.Ceiling((double)Model.TotalCount / Model.PageSize);
+}
+
+<div class="container py-4">
+    <h1>Knowledge Review Queue</h1>
+    <p class="text-muted">Pending learning and validation items requiring review approval.</p>
+
+    @if (!Model.Items.Any())
+    {
+        <div class="alert alert-info">No review items found.</div>
+    }
+    else
+    {
+        <div class="table-responsive">
+            <table class="table table-sm table-striped align-middle">
+                <thead>
+                    <tr>
+                        <th>Created</th>
+                        <th>Type</th>
+                        <th>Status</th>
+                        <th>Subject</th>
+                        <th>Summary</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                @foreach (var item in Model.Items)
+                {
+                    <tr>
+                        <td>@item.CreatedAt.ToLocalTime().ToString("g")</td>
+                        <td>@item.ItemType</td>
+                        <td>@item.Status</td>
+                        <td>@item.SubjectType / @item.SubjectStableId</td>
+                        <td>@item.Summary</td>
+                        <td>
+                            <div class="d-flex gap-1 flex-wrap">
+                                <a class="btn btn-sm btn-outline-primary" asp-controller="Knowledge" asp-action="Record" asp-route-stableId="@item.SubjectStableId">Open subject</a>
+                                <form asp-controller="Knowledge" asp-action="UpdateReviewStatus" method="post" class="d-inline">
+                                    @Html.AntiForgeryToken()
+                                    <input type="hidden" name="id" value="@item.Id" />
+                                    <input type="hidden" name="status" value="Approved" />
+                                    <button type="submit" class="btn btn-sm btn-success">Approve</button>
+                                </form>
+                                <form asp-controller="Knowledge" asp-action="UpdateReviewStatus" method="post" class="d-inline">
+                                    @Html.AntiForgeryToken()
+                                    <input type="hidden" name="id" value="@item.Id" />
+                                    <input type="hidden" name="status" value="Rejected" />
+                                    <button type="submit" class="btn btn-sm btn-danger">Reject</button>
+                                </form>
+                                <form asp-controller="Knowledge" asp-action="UpdateReviewStatus" method="post" class="d-inline">
+                                    @Html.AntiForgeryToken()
+                                    <input type="hidden" name="id" value="@item.Id" />
+                                    <input type="hidden" name="status" value="Deferred" />
+                                    <button type="submit" class="btn btn-sm btn-secondary">Defer</button>
+                                </form>
+                            </div>
+                        </td>
+                    </tr>
+                }
+                </tbody>
+            </table>
+        </div>
+    }
+
+    <div class="d-flex justify-content-between mt-3">
+        <a class="btn btn-outline-secondary @(Model.Page <= 1 ? "disabled" : null)" asp-action="ReviewQueue" asp-route-page="@(Model.Page - 1)" asp-route-pageSize="@Model.PageSize">Previous</a>
+        <span>Page @Model.Page of @Math.Max(1, totalPages)</span>
+        <a class="btn btn-outline-secondary @(Model.Page >= totalPages ? "disabled" : null)" asp-action="ReviewQueue" asp-route-page="@(Model.Page + 1)" asp-route-pageSize="@Model.PageSize">Next</a>
+    </div>
+</div>

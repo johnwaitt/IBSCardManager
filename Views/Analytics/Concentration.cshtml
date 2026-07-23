@@ -1,0 +1,35 @@
+@model IReadOnlyList<IBSCardManager.Models.CollectionConcentrationRowViewModel>
+@{
+    var dimension = ViewData["Dimension"]?.ToString() ?? "player";
+    ViewData["Title"] = "Concentration Analysis";
+}
+
+<div class="container py-4">
+    <h1>Concentration Analysis</h1>
+    <div class="mb-3 d-flex gap-2 flex-wrap">
+        <a class="btn btn-outline-secondary" href="/Analytics/Concentration?dimension=player">Player</a>
+        <a class="btn btn-outline-secondary" href="/Analytics/Concentration?dimension=team">Team</a>
+        <a class="btn btn-outline-secondary" href="/Analytics/Concentration?dimension=product">Product</a>
+        <a class="btn btn-outline-secondary" href="/Analytics/Concentration?dimension=year">Year</a>
+        <a class="btn btn-outline-primary" href="/Analytics/Export?kind=concentration&format=csv">Export CSV</a>
+    </div>
+
+    <div class="table-responsive">
+        <table class="table table-sm table-striped">
+            <thead><tr><th>@dimension</th><th>Cards</th><th>Total Value</th><th>Cost Basis</th><th>Unrealized</th><th>% of Collection</th></tr></thead>
+            <tbody>
+            @foreach (var row in Model)
+            {
+                <tr>
+                    <td>@row.Key</td>
+                    <td>@row.CardCount</td>
+                    <td>@row.TotalValue.ToString("C0")</td>
+                    <td>@row.CostBasis.ToString("C0")</td>
+                    <td>@row.UnrealizedGainLoss.ToString("C0")</td>
+                    <td>@row.PercentageOfCollectionValue.ToString("N2")%</td>
+                </tr>
+            }
+            </tbody>
+        </table>
+    </div>
+</div>

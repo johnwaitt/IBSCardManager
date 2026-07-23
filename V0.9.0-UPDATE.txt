@@ -1,0 +1,11 @@
+CardManager Pro v0.9.0 - Pair Selection
+
+- Click the first inbox image to select FRONT.
+- Click the second inbox image to select BACK.
+- Click either selected image to make that side active for zoom and rotation.
+- Pair Select can be toggled on or off.
+- Clear Pair resets both selections.
+- Existing Front and Back buttons remain available for manual correction.
+- Selected front and back images receive separate visual outlines.
+
+No database migration is required.

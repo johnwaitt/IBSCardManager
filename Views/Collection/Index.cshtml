@@ -1,0 +1,96 @@
+@model IBSCardManager.Models.CollectionOverviewViewModel
+@{
+    ViewData["Title"] = "My Collection";
+}
+
+@section Styles {
+    <link rel="stylesheet" href="~/css/collection.css" asp-append-version="true" />
+}
+
+<div class="collection-page">
+    <header class="collection-heading">
+        <div>
+            <span class="eyebrow">SET-BASED INVENTORY</span>
+            <h1>My Collection</h1>
+            <p>Open a set, enter the quantities you own, and let CardManager Pro update inventory automatically.</p>
+        </div>
+        <div class="collection-actions">
+            <a asp-controller="Checklists" asp-action="Import" class="btn btn-outline-primary">Import checklist</a>
+            <a asp-controller="Products" asp-action="Create" class="btn btn-primary">+ Add set</a>
+        </div>
+    </header>
+
+    @if (TempData["InventoryMessage"] is string inventoryMessage)
+    {
+        <div class="alert alert-success">@inventoryMessage</div>
+    }
+
+    <section class="collection-metrics">
+        <article><span>Sets</span><strong>@Model.TotalSets</strong><small>catalog products</small></article>
+        <article><span>Checklist cards</span><strong>@Model.TotalChecklistCards</strong><small>reference entries</small></article>
+        <article><span>Unique owned</span><strong>@Model.TotalUniqueOwned</strong><small>matched checklist cards</small></article>
+        <article><span>Total pieces</span><strong>@Model.TotalPiecesOwned</strong><small>including duplicates</small></article>
+    </section>
+
+    <form method="get" class="collection-search">
+        <input name="search" value="@Model.Search" type="search" placeholder="Search year, brand or set..." />
+        <button class="btn btn-primary">Search</button>
+        @if (!string.IsNullOrWhiteSpace(Model.Search))
+        {
+            <a asp-action="Index" class="btn btn-outline-secondary">Clear</a>
+        }
+    </form>
+
+    @if (Model.Sets.Count == 0)
+    {
+        <div class="collection-empty">
+            <h2>No sets found</h2>
+            <p>Create a set or import a checklist to begin tracking quantities.</p>
+        </div>
+    }
+    else
+    {
+        <section class="collection-grid">
+            @foreach (var set in Model.Sets)
+            {
+                <article class="collection-card">
+                    <div class="collection-card-top">
+                        <span class="set-year">@set.Year</span>
+                        <span class="set-brand">@set.BrandName</span>
+                    </div>
+                    <h2>@set.DisplayName</h2>
+                    <div class="collection-progress-row">
+                        <strong>@set.UniqueOwned / @set.ChecklistCount</strong>
+                        <span>@set.CompletionPercent%</span>
+                    </div>
+                    <div class="collection-progress" role="progressbar" aria-valuenow="@set.CompletionPercent" aria-valuemin="0" aria-valuemax="100">
+                        <span style="width:@set.CompletionPercent%"></span>
+                    </div>
+                    <div class="collection-stats">
+                        <div><span>Owned</span><strong>@set.UniqueOwned</strong></div>
+                        <div><span>Missing</span><strong>@set.MissingCount</strong></div>
+                        <div><span>Pieces</span><strong>@set.TotalQuantity</strong></div>
+                    </div>
+                    <div class="collection-card-actions">
+                        @if (set.ChecklistCount > 0)
+                        {
+                            <a asp-controller="Checklists" asp-action="AddSetToCollection" asp-route-productId="@set.ProductId" class="btn btn-primary">Enter quantities</a>
+                            <a asp-controller="Checklists" asp-action="EditSet" asp-route-productId="@set.ProductId" class="btn btn-outline-primary">Edit set & eBay</a>
+                            <a asp-controller="Checklists" asp-action="Index" asp-route-productId="@set.ProductId" class="btn btn-outline-secondary">Checklist</a>
+                        }
+                        else
+                        {
+                            <a asp-controller="Checklists" asp-action="Import" asp-route-productId="@set.ProductId" class="btn btn-primary">Import checklist</a>
+                        }
+                        <a href="@set.TcdbSearchUrl" target="_blank" rel="noopener" class="btn btn-outline-secondary">Search TCDB</a>
+                    </div>
+                </article>
+            }
+        </section>
+    }
+
+    <aside class="tcdb-notice">
+        <strong>TCDB reference search</strong>
+        <span>CardManager Pro opens a normal browser search for manual reference. It does not scrape, copy, or automatically import TCDB content.</span>
+    </aside>
+</div>

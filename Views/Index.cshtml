@@ -1,0 +1,245 @@
+@model IBSCardManager.Models.InventoryViewModel
+@{
+    ViewData["Title"] = "Inventory";
+    var cards = Model.Cards;
+}
+
+@section Styles {
+    <link rel="stylesheet" href="~/css/inventory.css" asp-append-version="true" />
+}
+
+<div class="inventory-page" id="inventoryApp"
+     data-details-url="@Url.Action("Details", "Cards")"
+     data-edit-url="@Url.Action("Edit", "Cards")"
+     data-scanner-url="@Url.Action("Index", "Scanner")">
+
+    <div class="page-heading inventory-heading">
+        <div>
+            <span class="eyebrow">COLLECTION WORKSPACE</span>
+            <h1>Inventory Pro+</h1>
+            <p>Browse, preview and manage your collection without leaving the grid.</p>
+        </div>
+        <a asp-action="Create" class="btn-primary-app">＋ Add Card</a>
+    </div>
+
+    @if (TempData["InventoryMessage"] is string message)
+    {
+        <div class="inventory-alert">@message</div>
+    }
+
+    <div class="inventory-kpis compact-kpis">
+        <div class="inventory-kpi"><span>Cards</span><strong>@Model.RecordCount.ToString("N0")</strong></div>
+        <div class="inventory-kpi"><span>Pieces</span><strong>@Model.PieceCount.ToString("N0")</strong></div>
+        <div class="inventory-kpi"><span>Value</span><strong>@Model.CollectionValue.ToString("C0")</strong></div>
+        <div class="inventory-kpi"><span>Graded</span><strong>@Model.GradedCount.ToString("N0")</strong></div>
+        <div class="inventory-kpi"><span>Listed</span><strong>@Model.ListedCount.ToString("N0")</strong></div>
+    </div>
+
+    <div class="inventory-ribbon" role="toolbar" aria-label="Inventory actions">
+        <a asp-action="Create" class="ribbon-command primary"><span>＋</span>Add</a>
+        <button type="button" class="ribbon-command" id="editBtn" disabled><span>✎</span>Edit</button>
+        <button type="button" class="ribbon-command" id="previewBtn" disabled><span>▣</span>Open</button>
+        <a asp-controller="Scanner" asp-action="Index" class="ribbon-command"><span>▧</span>Scanner</a>
+        <span class="ribbon-divider"></span>
+        <button type="button" class="ribbon-command" id="ebayBtn" disabled><span>e</span>eBay</button>
+        <a asp-action="ExportCsv" class="ribbon-command"><span>⇩</span>Export</a>
+        <button type="button" class="ribbon-command" id="printBtn"><span>▤</span>Print</button>
+        <span class="ribbon-divider"></span>
+        <button type="button" class="ribbon-command" id="columnsBtn"><span>☷</span>Columns</button>
+        <button type="button" class="ribbon-command" id="togglePreviewBtn"><span>◫</span>Preview pane</button>
+        <button type="button" class="ribbon-command" id="resetLayoutBtn"><span>↺</span>Reset</button>
+        <button type="button" class="ribbon-command danger" id="deleteBtn" disabled><span>×</span>Delete</button>
+    </div>
+
+    <div class="inventory-filters-pro">
+        <div class="search-box"><span>⌕</span><input id="inventorySearch" type="search" placeholder="Search player, set, team, card number, certificate, serial or parallel..." value="@Model.Search" /></div>
+        <select id="teamFilter"><option value="">All teams</option>@foreach (var item in Model.Teams){<option value="@item">@item</option>}</select>
+        <select id="brandFilter"><option value="">All brands</option>@foreach (var item in Model.Brands){<option value="@item">@item</option>}</select>
+        <select id="yearFilter"><option value="">All years</option>@foreach (var item in Model.Years){<option value="@item">@item</option>}</select>
+        <select id="gradeFilter"><option value="">All grades</option>@foreach (var item in Model.Grades){<option value="@item">@item</option>}</select>
+        <select id="statusFilter"><option value="">All statuses</option>@foreach (var item in Model.Statuses){<option value="@item">@item</option>}</select>
+        <select id="boxFilter"><option value="">All boxes</option>@foreach (var item in Model.StorageBoxes){<option value="@item">@item</option>}</select>
+        <button type="button" id="clearFilters" class="clear-filter">Clear</button>
+    </div>
+
+    <div class="inventory-summary-pro">
+        <span><strong id="visibleCount">@Model.RecordCount</strong> shown</span>
+        <span>Shown value: <strong id="visibleValue">@Model.CollectionValue.ToString("C2")</strong></span>
+        <span><strong id="selectedCount">0</strong> selected</span>
+        <span>Selected value: <strong id="selectedValue">$0.00</strong></span>
+        <span class="summary-spacer">Click a row to preview · Double-click to open · Ctrl+A selects shown</span>
+    </div>
+
+    <div class="inventory-workspace" id="inventoryWorkspace">
+        <div class="inventory-grid-shell">
+            <table class="inventory-grid" id="inventoryTable">
+                <thead>
+                <tr>
+                    <th class="select-col" data-column="select"><input type="checkbox" id="selectAll" aria-label="Select all visible cards" /></th>
+                    <th class="image-col" data-column="image">Image</th>
+                    <th data-column="player" data-sort="text" style="width:190px">Player</th>
+                    <th data-column="brand" data-sort="text" style="width:105px">Brand</th>
+                    <th data-column="year" data-sort="number" style="width:70px">Year</th>
+                    <th data-column="team" data-sort="text" style="width:130px">Team</th>
+                    <th data-column="set" data-sort="text" style="width:210px">Set / Product</th>
+                    <th data-column="card" data-sort="text" style="width:95px">Card #</th>
+                    <th data-column="grade" data-sort="text" style="width:110px">Grade</th>
+                    <th data-column="quantity" data-sort="number" style="width:70px">Qty</th>
+                    <th data-column="value" data-sort="number" class="money-col" style="width:100px">Value</th>
+                    <th data-column="location" data-sort="text" style="width:150px">Location</th>
+                    <th data-column="status" data-sort="text" style="width:120px">Status</th>
+                </tr>
+                </thead>
+                <tbody>
+                @foreach (var card in cards)
+                {
+                    var grade = string.IsNullOrWhiteSpace(card.GradeIssuer) ? "Raw" : $"{card.GradeIssuer} {card.Grade}".Trim();
+                    var gradeGroup = string.IsNullOrWhiteSpace(card.GradeIssuer) ? "Raw" : card.GradeIssuer!;
+                    var brand = card.Product?.Brand?.BrandName ?? "";
+                    var productName = card.Set ?? card.Product?.DisplayName ?? "—";
+                    var location = string.Join(" / ", new[] { card.StorageBox, card.StorageRow, card.StorageBin }.Where(value => !string.IsNullOrWhiteSpace(value)));
+                    var quantity = Math.Max(card.Quantity, 1);
+                    var totalValue = (card.MyValue ?? 0m) * quantity;
+                    var totalValueLabel = totalValue.ToString("C2");
+                    var searchable = $"{card.Subject} {card.Team} {brand} {productName} {card.CardNumber} {card.CertNumber} {card.Variety} {card.Serial} {grade} {location} {card.ListingStatus}".ToLowerInvariant();
+                    var status = string.IsNullOrWhiteSpace(card.ListingStatus) ? "Not Listed" : card.ListingStatus;
+                    var gradeClass = string.IsNullOrWhiteSpace(card.GradeIssuer) ? "raw" : card.GradeIssuer!.ToLowerInvariant().Replace(" ", "-");
+                    var statusClass = status!.ToLowerInvariant().Replace(" ", "-");
+                    <tr tabindex="0"
+                        data-id="@card.CardId"
+                        data-team="@card.Team"
+                        data-brand="@brand"
+                        data-year="@card.Year"
+                        data-grade="@gradeGroup"
+                        data-status="@status"
+                        data-box="@card.StorageBox"
+                        data-total-value="@totalValue.ToString(System.Globalization.CultureInfo.InvariantCulture)"
+                        data-search="@searchable"
+                        data-player="@card.Subject"
+                        data-product="@productName"
+                        data-card-number="@card.CardNumber"
+                        data-variety="@card.Variety"
+                        data-serial="@card.Serial"
+                        data-grade-label="@grade"
+                        data-quantity="@quantity"
+                        data-value-label="@totalValueLabel"
+                        data-location="@location"
+                        data-front="@card.FrontImagePath"
+                        data-back="@card.BackImagePath"
+                        data-notes="@card.MyNotes"
+                        data-rookie="@card.IsRookie.ToString().ToLowerInvariant()"
+                        data-auto="@card.IsAutograph.ToString().ToLowerInvariant()"
+                        data-relic="@card.IsRelic.ToString().ToLowerInvariant()">
+                        <td data-column="select"><input type="checkbox" class="row-check" aria-label="Select @card.Subject" /></td>
+                        <td data-column="image">
+                            <div class="inventory-thumb" data-image-preview="@card.FrontImagePath">
+                                @if (!string.IsNullOrWhiteSpace(card.FrontImagePath))
+                                {
+                                    <img src="@card.FrontImagePath" alt="@card.Subject" loading="lazy" onerror="this.style.display='none';this.nextElementSibling.style.display='flex';" />
+                                }
+                                <span class="thumb-empty" style="@(!string.IsNullOrWhiteSpace(card.FrontImagePath) ? "display:none" : "")">No image</span>
+                            </div>
+                        </td>
+                        <td data-column="player"><div class="player-cell"><strong>@card.Subject</strong><small>@card.Variety @if(card.IsAutograph){<span class="feature-tag auto">AUTO</span>} @if(card.IsRookie){<span class="feature-tag rookie">RC</span>} @if(card.IsRelic){<span class="feature-tag relic">RELIC</span>}</small></div></td>
+                        <td data-column="brand">@(string.IsNullOrWhiteSpace(brand) ? "—" : brand)</td>
+                        <td data-column="year" data-value="@(card.Year ?? 0)">@card.Year</td>
+                        <td data-column="team">@(card.Team ?? "—")</td>
+                        <td data-column="set"><strong>@productName</strong></td>
+                        <td data-column="card">@(card.CardNumber ?? "—")<small class="serial-text">@card.Serial</small></td>
+                        <td data-column="grade"><span class="grade-pill grade-@gradeClass">@grade</span></td>
+                        <td data-column="quantity" data-value="@quantity">@quantity</td>
+                        <td data-column="value" data-value="@totalValue" class="money-col">@totalValue.ToString("C2")</td>
+                        <td data-column="location">@(string.IsNullOrWhiteSpace(location) ? "—" : location)</td>
+                        <td data-column="status"><span class="status-pill status-@statusClass">@status</span></td>
+                    </tr>
+                }
+                </tbody>
+            </table>
+            <div id="emptyInventory" class="inventory-empty" hidden><strong>No matching cards</strong><span>Change or clear the filters.</span></div>
+        </div>
+
+        <aside class="card-preview-pane" id="cardPreviewPane" aria-live="polite">
+            <div class="preview-empty" id="previewEmpty">
+                <div class="preview-empty-icon">▣</div>
+                <strong>Select a card</strong>
+                <span>Its images and details will appear here.</span>
+            </div>
+            <div class="preview-content" id="previewContent" hidden>
+                <div class="preview-pane-header">
+                    <div>
+                        <span class="preview-eyebrow">SELECTED CARD</span>
+                        <h2 id="previewPlayer"></h2>
+                        <p id="previewSubtitle"></p>
+                    </div>
+                    <button type="button" class="preview-close" id="previewClose" title="Hide preview pane">×</button>
+                </div>
+
+                <div class="preview-image-stage">
+                    <div class="preview-tabs">
+                        <button type="button" class="active" data-preview-side="front">Front</button>
+                        <button type="button" data-preview-side="back">Back</button>
+                    </div>
+                    <div class="preview-card-image-wrap">
+                        <img id="previewImage" alt="Selected card" />
+                        <div class="preview-no-image" id="previewNoImage">No image available</div>
+                    </div>
+                    <div class="preview-image-hint">Click image to open full size</div>
+                </div>
+
+                <div class="preview-badges" id="previewBadges"></div>
+
+                <dl class="preview-details">
+                    <div><dt>Team</dt><dd id="previewTeam">—</dd></div>
+                    <div><dt>Year</dt><dd id="previewYear">—</dd></div>
+                    <div><dt>Brand</dt><dd id="previewBrand">—</dd></div>
+                    <div><dt>Set</dt><dd id="previewSet">—</dd></div>
+                    <div><dt>Card #</dt><dd id="previewCardNumber">—</dd></div>
+                    <div><dt>Parallel</dt><dd id="previewVariety">—</dd></div>
+                    <div><dt>Serial</dt><dd id="previewSerial">—</dd></div>
+                    <div><dt>Grade</dt><dd id="previewGrade">—</dd></div>
+                    <div><dt>Value</dt><dd id="previewValue">—</dd></div>
+                    <div><dt>Location</dt><dd id="previewLocation">—</dd></div>
+                    <div><dt>Status</dt><dd id="previewStatus">—</dd></div>
+                    <div><dt>Quantity</dt><dd id="previewQuantity">—</dd></div>
+                </dl>
+
+                <div class="preview-notes" id="previewNotesWrap" hidden>
+                    <span>Notes</span>
+                    <p id="previewNotes"></p>
+                </div>
+
+                <div class="preview-actions">
+                    <button type="button" id="previewEditAction" class="btn-primary-app">Edit</button>
+                    <button type="button" id="previewOpenAction" class="btn-secondary-app">Full Details</button>
+                </div>
+            </div>
+        </aside>
+    </div>
+</div>
+
+<div class="image-hover-card" id="imageHoverCard" hidden><img alt="Card preview" /></div>
+
+<div class="column-menu" id="columnMenu" hidden>
+    <strong>Show columns</strong>
+    @foreach (var column in new[] { ("player","Player"), ("brand","Brand"), ("year","Year"), ("team","Team"), ("set","Set / Product"), ("card","Card #"), ("grade","Grade"), ("quantity","Quantity"), ("value","Value"), ("location","Location"), ("status","Status") })
+    {
+        <label><input type="checkbox" data-toggle-column="@column.Item1" checked /> @column.Item2</label>
+    }
+</div>
+
+<div class="inventory-context-menu" id="contextMenu" hidden>
+    <button type="button" data-command="preview">Open full details</button>
+    <button type="button" data-command="edit">Edit</button>
+    <button type="button" data-command="scanner">Open Scanner</button>
+    <hr />
+    <button type="button" data-command="delete" class="danger-text">Delete selected</button>
+</div>
+
+<form id="bulkDeleteForm" asp-action="BulkDelete" method="post" hidden>
+    @Html.AntiForgeryToken()
+    <input id="selectedIds" name="selectedIds" />
+</form>
+
+@section Scripts {
+    <script src="~/js/inventory.js" asp-append-version="true"></script>
+}

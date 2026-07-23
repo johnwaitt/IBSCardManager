@@ -1,0 +1,56 @@
+@model IBSCardManager.Models.DiagnosticsViewModel
+@{
+    ViewData["Title"] = "Diagnostics";
+}
+
+<div class="container py-4">
+    <h1>Diagnostics</h1>
+    <p class="text-muted">Generated: @Model.GeneratedAt.ToLocalTime().ToString("g")</p>
+
+    <div class="row g-3 mb-4">
+        <div class="col-md-6"><div class="card p-3"><strong>Application Version</strong><div>@Model.ApplicationVersion</div></div></div>
+        <div class="col-md-6"><div class="card p-3"><strong>Upper-left Display</strong><div>@Model.UpperLeftDisplayVersion</div></div></div>
+        <div class="col-md-6"><div class="card p-3"><strong>Build / Informational Version</strong><div>@Model.InformationalVersion</div></div></div>
+        <div class="col-md-6"><div class="card p-3"><strong>Schema Version</strong><div>@(Model.SchemaVersion ?? "Unavailable")</div></div></div>
+        <div class="col-md-6"><div class="card p-3"><strong>Catalog Version</strong><div>@(Model.CatalogVersion ?? "Unavailable")</div></div></div>
+        <div class="col-md-6"><div class="card p-3"><strong>Catalog Provider</strong><div>@Model.CatalogProvider</div></div></div>
+        <div class="col-md-6"><div class="card p-3"><strong>Catalog Database Status</strong><div>@Model.CatalogDatabaseStatus</div></div></div>
+        <div class="col-md-6"><div class="card p-3"><strong>Knowledge Schema Version</strong><div>@(Model.KnowledgeSchemaVersion ?? "Unavailable")</div></div></div>
+        <div class="col-md-6"><div class="card p-3"><strong>Confidence Rule Version</strong><div>@(Model.ConfidenceRuleVersion ?? "Unavailable")</div></div></div>
+        <div class="col-md-6"><div class="card p-3"><strong>Learning Rule Version</strong><div>@(Model.LearningRuleVersion ?? "Unavailable")</div></div></div>
+        <div class="col-md-6"><div class="card p-3"><strong>AI Model Configuration</strong><div>@(Model.AiModelConfiguration ?? "Unavailable")</div></div></div>
+        <div class="col-md-6"><div class="card p-3"><strong>Knowledge Records</strong><div>@Model.KnowledgeRecordCount</div></div></div>
+        <div class="col-md-6"><div class="card p-3"><strong>Evidence Records</strong><div>@Model.EvidenceCount</div></div></div>
+        <div class="col-md-6"><div class="card p-3"><strong>User Corrections</strong><div>@Model.CorrectionCount</div></div></div>
+        <div class="col-md-6"><div class="card p-3"><strong>Pending Review</strong><div>@Model.PendingReviewCount</div></div></div>
+        <div class="col-md-6"><div class="card p-3"><strong>Disputed Records</strong><div>@Model.DisputedRecordCount</div></div></div>
+        <div class="col-md-6"><div class="card p-3"><strong>Low-confidence Records</strong><div>@Model.LowConfidenceRecordCount</div></div></div>
+        <div class="col-md-6"><div class="card p-3"><strong>Knowledge Health</strong><div>@Model.KnowledgeHealthStatus</div></div></div>
+        <div class="col-md-6"><div class="card p-3"><strong>Last Knowledge Backup</strong><div>@(Model.LastKnowledgeBackup ?? "Unavailable")</div></div></div>
+    </div>
+
+    <h2>Catalog Readiness Integrity Checks</h2>
+    @if (Model.IntegrityIssues.Count == 0)
+    {
+        <p class="text-success">No integrity issues detected.</p>
+    }
+    else
+    {
+        <div class="table-responsive">
+            <table class="table table-sm table-striped">
+                <thead><tr><th>Code</th><th>Severity</th><th>Summary</th><th>Details</th></tr></thead>
+                <tbody>
+                @foreach (var issue in Model.IntegrityIssues)
+                {
+                    <tr>
+                        <td>@issue.Code</td>
+                        <td>@issue.Severity</td>
+                        <td>@issue.Summary</td>
+                        <td>@issue.Details</td>
+                    </tr>
+                }
+                </tbody>
+            </table>
+        </div>
+    }
+</div>
