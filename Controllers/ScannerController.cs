@@ -218,9 +218,30 @@ public class ScannerController : Controller
         if (string.IsNullOrWhiteSpace(intakeFolder)) return BadRequest("The scanner intake folder is not configured.");
         Directory.CreateDirectory(intakeFolder);
 
-        var sourceStem = Path.GetFileNameWithoutExtension(sourceFileName);
-        var safeStem = string.Concat(sourceStem.Select(ch => char.IsLetterOrDigit(ch) || ch is '-' or '_' ? ch : '-'));
-        var fileName = $"{safeStem}-{side}-accepted-{DateTime.Now:yyyyMMddHHmmssfff}.jpg";
+        var sourceStem = Path.GetFileNameWithoutExtension(
+    Path.GetFileName(sourceFileName ?? string.Empty));
+
+        sourceStem = System.Text.RegularExpressions.Regex.Replace(
+            sourceStem,
+            @"-(front|back)-accepted-\d+",
+            string.Empty,
+            System.Text.RegularExpressions.RegexOptions.IgnoreCase);
+
+        var safeStem = string.Concat(
+            sourceStem.Select(ch =>
+                char.IsLetterOrDigit(ch) || ch is '-' or '_'
+                    ? ch
+                    : '-'));
+
+        safeStem = safeStem.Trim('-', '_');
+
+        if (string.IsNullOrWhiteSpace(safeStem))
+        {
+            safeStem = Guid.NewGuid().ToString("N");
+        }
+
+        var fileName =
+            $"{safeStem}-{side}-accepted-{DateTime.UtcNow:yyyyMMddHHmmssfff}.jpg";
         var path = Path.Combine(intakeFolder, fileName);
         await using (var stream = System.IO.File.Create(path))
         {
