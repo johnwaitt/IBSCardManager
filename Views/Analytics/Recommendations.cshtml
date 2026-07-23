@@ -1,55 +1,87 @@
 @model IBSCardManager.Models.RecommendationCenterViewModel
 @{
     ViewData["Title"] = "Smart Recommendations";
+    var gradeCount = Model.GradeThese.Count;
+    var sellCount = Model.SellThese.Count;
+    var holdCount = Model.HoldThese.Count;
+    var fixCount = Model.FixTheseRecords.Count;
+    var duplicateCount = Model.ListTheseDuplicates.Count;
 }
 
-<div class="container py-4">
-    <h1>Smart Recommendations</h1>
-    <p class="text-muted">Last calculated: @Model.LastCalculatedAt.ToLocalTime().ToString("g")</p>
+<style>
+    .recommendation-center{max-width:1500px;margin:0 auto;padding:1rem}.recommendation-hero{display:flex;justify-content:space-between;gap:1rem;align-items:flex-end;margin-bottom:1rem}.recommendation-hero h1{margin:0;font-size:2rem}.recommendation-hero p{margin:.25rem 0 0;color:#64748b}.recommendation-kpis{display:grid;grid-template-columns:repeat(5,minmax(145px,1fr));gap:.75rem;margin-bottom:1rem}.recommendation-kpi{border:1px solid #dbe3ef;background:#fff;border-radius:14px;padding:1rem;text-decoration:none;color:inherit;display:flex;align-items:center;gap:.8rem;box-shadow:0 4px 14px rgba(15,23,42,.05);transition:.15s ease}.recommendation-kpi:hover{transform:translateY(-2px);box-shadow:0 8px 22px rgba(15,23,42,.1)}.recommendation-kpi i{font-size:1.45rem;width:42px;height:42px;border-radius:12px;display:grid;place-items:center;background:#eff6ff;color:#2563eb}.recommendation-kpi span{display:block;color:#64748b;font-size:.78rem;text-transform:uppercase;letter-spacing:.05em}.recommendation-kpi strong{font-size:1.55rem;line-height:1}.recommendation-section{background:#fff;border:1px solid #dbe3ef;border-radius:16px;margin-bottom:.85rem;overflow:hidden;box-shadow:0 4px 14px rgba(15,23,42,.04)}.recommendation-section>summary{list-style:none;cursor:pointer;padding:1rem 1.1rem;display:flex;justify-content:space-between;align-items:center;font-weight:700;font-size:1.05rem}.recommendation-section>summary::-webkit-details-marker{display:none}.recommendation-section>summary span{display:flex;align-items:center;gap:.65rem}.recommendation-section>summary b{font-size:.78rem;background:#eaf1fb;color:#334155;border-radius:999px;padding:.25rem .55rem}.recommendation-section-body{padding:0 1rem 1rem}.recommendation-list{display:grid;gap:.65rem}.recommendation-row{border:1px solid #e2e8f0;border-radius:12px;padding:.85rem;display:grid;grid-template-columns:minmax(250px,1.2fr) minmax(430px,2fr) minmax(180px,.9fr);gap:.8rem;align-items:center}.recommendation-card-identity{display:flex;gap:.75rem;align-items:flex-start}.recommendation-score{width:48px;height:48px;border-radius:12px;background:#0f172a;color:#fff;display:grid;place-items:center;font-size:1rem;font-weight:800}.recommendation-card-identity h3{font-size:1rem;margin:0}.recommendation-card-identity p{margin:.15rem 0;color:#64748b;font-size:.82rem}.recommendation-label{display:inline-block;font-size:.72rem;font-weight:700;background:#dbeafe;color:#1d4ed8;border-radius:999px;padding:.2rem .45rem}.recommendation-metrics{display:grid;grid-template-columns:repeat(5,minmax(75px,1fr));gap:.45rem}.recommendation-metrics div{border-left:1px solid #e2e8f0;padding-left:.55rem}.recommendation-metrics span,.recommendation-metrics small{display:block;color:#64748b;font-size:.68rem}.recommendation-metrics strong{display:block;font-size:.9rem}.confidence-high{color:#15803d}.confidence-medium{color:#b45309}.confidence-low{color:#b91c1c}.recommendation-detail{grid-column:1/3}.recommendation-detail summary{cursor:pointer;color:#2563eb;font-size:.78rem}.recommendation-detail div{margin-top:.5rem}.recommendation-detail p{margin:.15rem 0;font-size:.8rem;color:#475569}.recommendation-actions{display:flex;flex-wrap:wrap;justify-content:flex-end;gap:.35rem}.recommendation-actions form{margin:0}.recommendation-empty{padding:1.3rem;border:1px dashed #cbd5e1;border-radius:12px;color:#64748b;display:flex;gap:.75rem;align-items:center}.recommendation-empty i{font-size:1.5rem;color:#16a34a}.recommendation-empty strong,.recommendation-empty span{display:block}.recommendation-empty span{font-size:.82rem}.data-review-grid{display:grid;grid-template-columns:1fr 1fr;gap:.75rem}.data-review-card{border:1px solid #e2e8f0;border-radius:12px;padding:.75rem}.data-review-card strong{display:block}.data-review-card span{color:#64748b;font-size:.8rem}.data-review-card small{display:block;margin-top:.35rem;color:#475569}.recommendation-review-empty{padding:1rem;color:#64748b;text-align:center}
+    @@media(max-width:1100px){.recommendation-kpis{grid-template-columns:repeat(2,1fr)}.recommendation-row{grid-template-columns:1fr}.recommendation-detail{grid-column:auto}.recommendation-actions{justify-content:flex-start}.recommendation-metrics{grid-template-columns:repeat(3,1fr)}}
+    @@media(max-width:650px){.recommendation-center{padding:.5rem}.recommendation-hero{display:block}.recommendation-kpis{grid-template-columns:1fr}.recommendation-metrics,.data-review-grid{grid-template-columns:1fr 1fr}.recommendation-row{padding:.65rem}}
+</style>
 
-    <h2>Grade These</h2>
-    <partial name="_RecommendationTable" model="Model.GradeThese" />
+<div class="recommendation-center">
+    <header class="recommendation-hero">
+        <div>
+            <span class="eyebrow">AI COLLECTION ADVISOR</span>
+            <h1>Smart Recommendations</h1>
+            <p>Actionable grading, selling, holding and data-quality decisions for your collection.</p>
+        </div>
+        <small class="text-muted">Last calculated @Model.LastCalculatedAt.ToLocalTime().ToString("g")</small>
+    </header>
 
-    <h2 class="mt-4">Sell These</h2>
-    <partial name="_RecommendationTable" model="Model.SellThese" />
+    <nav class="recommendation-kpis" aria-label="Recommendation categories">
+        <a class="recommendation-kpi" href="#grade"><i class="bi bi-award"></i><div><span>Grade now</span><strong>@gradeCount</strong></div></a>
+        <a class="recommendation-kpi" href="#sell"><i class="bi bi-cash-stack"></i><div><span>Sell now</span><strong>@sellCount</strong></div></a>
+        <a class="recommendation-kpi" href="#hold"><i class="bi bi-graph-up-arrow"></i><div><span>Hold</span><strong>@holdCount</strong></div></a>
+        <a class="recommendation-kpi" href="#fix"><i class="bi bi-exclamation-triangle"></i><div><span>Needs review</span><strong>@fixCount</strong></div></a>
+        <a class="recommendation-kpi" href="#duplicates"><i class="bi bi-copy"></i><div><span>Duplicates</span><strong>@duplicateCount</strong></div></a>
+    </nav>
 
-    <h2 class="mt-4">Hold These</h2>
-    <partial name="_RecommendationTable" model="Model.HoldThese" />
+    <details class="recommendation-section" id="grade" open>
+        <summary><span><i class="bi bi-award"></i> Grade These</span><b>@gradeCount cards</b></summary>
+        <div class="recommendation-section-body"><partial name="_RecommendationTable" model="Model.GradeThese" /></div>
+    </details>
 
-    <h2 class="mt-4">Fix These Records</h2>
-    <div class="table-responsive">
-        <table class="table table-sm table-striped">
-            <thead><tr><th>Card</th><th>Score</th><th>Class</th><th>Missing Data</th></tr></thead>
-            <tbody>
-            @foreach (var issue in Model.FixTheseRecords)
+    <details class="recommendation-section" id="sell" open>
+        <summary><span><i class="bi bi-cash-stack"></i> Sell These</span><b>@sellCount cards</b></summary>
+        <div class="recommendation-section-body"><partial name="_RecommendationTable" model="Model.SellThese" /></div>
+    </details>
+
+    <details class="recommendation-section" id="hold">
+        <summary><span><i class="bi bi-graph-up-arrow"></i> Hold These</span><b>@holdCount cards</b></summary>
+        <div class="recommendation-section-body"><partial name="_RecommendationTable" model="Model.HoldThese" /></div>
+    </details>
+
+    <details class="recommendation-section" id="fix">
+        <summary><span><i class="bi bi-exclamation-triangle"></i> Fix These Records</span><b>@fixCount records</b></summary>
+        <div class="recommendation-section-body">
+            @if (fixCount == 0)
             {
-                <tr>
-                    <td>@issue.CardIdentity</td>
-                    <td>@issue.Score.ToString("N1")</td>
-                    <td>@issue.Classification</td>
-                    <td>@string.Join(", ", issue.MissingFields)</td>
-                </tr>
+                <div class="recommendation-review-empty">No records currently need repair.</div>
             }
-            </tbody>
-        </table>
-    </div>
-
-    <h2 class="mt-4">List These Duplicates</h2>
-    <div class="table-responsive">
-        <table class="table table-sm table-striped">
-            <thead><tr><th>Group</th><th>Copies</th><th>Raw</th><th>Graded</th><th>Recommendation</th></tr></thead>
-            <tbody>
-            @foreach (var duplicate in Model.ListTheseDuplicates)
+            else
             {
-                <tr>
-                    <td>@duplicate.GroupKey</td>
-                    <td>@duplicate.Copies</td>
-                    <td>@duplicate.RawCopies</td>
-                    <td>@duplicate.GradedCopies</td>
-                    <td>@duplicate.Recommendation</td>
-                </tr>
+                <div class="data-review-grid">
+                    @foreach (var issue in Model.FixTheseRecords)
+                    {
+                        <article class="data-review-card"><strong>@issue.CardIdentity</strong><span>Score @issue.Score.ToString("N1") · @issue.Classification</span><small>Missing: @string.Join(", ", issue.MissingFields)</small></article>
+                    }
+                </div>
             }
-            </tbody>
-        </table>
-    </div>
+        </div>
+    </details>
+
+    <details class="recommendation-section" id="duplicates">
+        <summary><span><i class="bi bi-copy"></i> List These Duplicates</span><b>@duplicateCount groups</b></summary>
+        <div class="recommendation-section-body">
+            @if (duplicateCount == 0)
+            {
+                <div class="recommendation-review-empty">No duplicate groups currently require action.</div>
+            }
+            else
+            {
+                <div class="data-review-grid">
+                    @foreach (var duplicate in Model.ListTheseDuplicates)
+                    {
+                        <article class="data-review-card"><strong>@duplicate.GroupKey</strong><span>@duplicate.Copies copies · @duplicate.RawCopies raw · @duplicate.GradedCopies graded</span><small>@duplicate.Recommendation</small></article>
+                    }
+                </div>
+            }
+        </div>
+    </details>
 </div>
