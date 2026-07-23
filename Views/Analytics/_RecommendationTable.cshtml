@@ -1,60 +1,65 @@
 @model IReadOnlyList<IBSCardManager.Models.AnalyticsCardScoreViewModel>
 
-<div class="table-responsive">
-    <table class="table table-sm table-striped">
-        <thead>
-            <tr>
-                <th>Card</th>
-                <th>Recommendation</th>
-                <th>Score</th>
-                <th>Confidence</th>
-                <th>Impact</th>
-                <th>Expected Graded</th>
-                <th>Break-even</th>
-                <th>Best Grader</th>
-                <th>Reasons</th>
-                <th>Risks</th>
-                <th>Actions</th>
-            </tr>
-        </thead>
-        <tbody>
+@if (Model.Count == 0)
+{
+    <div class="recommendation-empty">
+        <i class="bi bi-check2-circle" aria-hidden="true"></i>
+        <div>
+            <strong>No cards in this category</strong>
+            <span>Recommendations will appear after analytics recalculates your collection.</span>
+        </div>
+    </div>
+}
+else
+{
+    <div class="recommendation-list">
         @foreach (var row in Model)
         {
-            <tr>
-                <td>
-                    <div>@row.Title</div>
-                    <small class="text-muted">@row.SetName #@row.CardNumber</small>
-                </td>
-                <td>@row.Recommendation</td>
-                <td>@row.Score.ToString("N1")</td>
-                <td>@row.Confidence.ToString("N1")%</td>
-                <td>@row.UnrealizedGainLoss.ToString("C0")</td>
-                <td>@row.ExpectedGradedValue.ToString("C0") (@row.ExpectedNetProfit.ToString("C0"), @row.ExpectedRoiPercent.ToString("N1")%)</td>
-                <td>@row.BreakEvenGrade (@row.MinTopGradeProbability.ToString("N1")%)</td>
-                <td>@row.BestGrader</td>
-                <td><small>@row.Reason</small></td>
-                <td><small>@row.Risks</small></td>
-                <td>
-                    <form asp-controller="Analytics" asp-action="Accept" method="post" class="mb-1">
+            var confidenceClass = row.Confidence >= 85 ? "high" : row.Confidence >= 65 ? "medium" : "low";
+            <article class="recommendation-row">
+                <div class="recommendation-card-identity">
+                    <span class="recommendation-score">@row.Score.ToString("N0")</span>
+                    <div>
+                        <h3>@row.Title</h3>
+                        <p>@row.SetName #@row.CardNumber</p>
+                        <span class="recommendation-label">@row.Recommendation</span>
+                    </div>
+                </div>
+
+                <div class="recommendation-metrics">
+                    <div><span>Confidence</span><strong class="confidence-@confidenceClass">@row.Confidence.ToString("N0")%</strong></div>
+                    <div><span>Impact</span><strong>@row.UnrealizedGainLoss.ToString("C0")</strong></div>
+                    <div><span>Expected graded</span><strong>@row.ExpectedGradedValue.ToString("C0")</strong><small>@row.ExpectedRoiPercent.ToString("N0")% ROI</small></div>
+                    <div><span>Break-even</span><strong>@row.BreakEvenGrade</strong><small>@row.MinTopGradeProbability.ToString("N0")% probability</small></div>
+                    <div><span>Best grader</span><strong>@row.BestGrader</strong></div>
+                </div>
+
+                <details class="recommendation-detail">
+                    <summary>Why this recommendation</summary>
+                    <div><strong>Reasons</strong><p>@row.Reason</p></div>
+                    <div><strong>Risks</strong><p>@row.Risks</p></div>
+                </details>
+
+                <div class="recommendation-actions">
+                    <form asp-controller="Analytics" asp-action="Accept" method="post">
                         @Html.AntiForgeryToken()
                         <input type="hidden" name="id" value="@row.CardId" />
-                        <button class="btn btn-sm btn-outline-success" type="submit">Accept</button>
+                        <button class="btn btn-sm btn-success" type="submit"><i class="bi bi-check2"></i> Accept</button>
                     </form>
-                    <form asp-controller="Analytics" asp-action="Dismiss" method="post" class="mb-1">
-                        @Html.AntiForgeryToken()
-                        <input type="hidden" name="id" value="@row.CardId" />
-                        <button class="btn btn-sm btn-outline-danger" type="submit">Dismiss</button>
-                    </form>
-                    <form asp-controller="Analytics" asp-action="Snooze" method="post" class="mb-1">
+                    <a class="btn btn-sm btn-outline-primary" href="/Cards/Details/@row.CardId"><i class="bi bi-box-arrow-up-right"></i> Open</a>
+                    <form asp-controller="Analytics" asp-action="Snooze" method="post">
                         @Html.AntiForgeryToken()
                         <input type="hidden" name="id" value="@row.CardId" />
                         <input type="hidden" name="days" value="14" />
-                        <button class="btn btn-sm btn-outline-secondary" type="submit">Snooze</button>
+                        <button class="btn btn-sm btn-outline-secondary" type="submit"><i class="bi bi-clock"></i> Snooze</button>
                     </form>
-                    <a class="btn btn-sm btn-outline-primary" href="/Cards/Details/@row.CardId">Open Card</a>
-                </td>
-            </tr>
+                    <form asp-controller="Analytics" asp-action="Dismiss" method="post">
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" name="id" value="@row.CardId" />
+                        <button class="btn btn-sm btn-outline-danger" type="submit"><i class="bi bi-x-lg"></i> Dismiss</button>
+                    </form>
+                </div>
+            </article>
         }
-        </tbody>
-    </table>
-</div>
+    </div>
+}
