@@ -48,6 +48,9 @@
             <a asp-controller="Products" asp-action="Index" class="nav-link nav-icon-button @(controller == "Products" || controller == "Checklists" ? "active is-selected" : "")" aria-current="@(controller == "Products" || controller == "Checklists" ? "page" : null)">
                 <span class="nav-icon"><i class="bi bi-database" aria-hidden="true"></i></span><span>Master Database</span>
             </a>
+            <a asp-controller="CatalogImport" asp-action="Index" class="nav-link nav-icon-button @(controller == "CatalogImport" ? "active is-selected" : "")" aria-current="@(controller == "CatalogImport" ? "page" : null)">
+                <span class="nav-icon"><i class="bi bi-file-earmark-arrow-up" aria-hidden="true"></i></span><span>Catalog Import</span>
+            </a>
             <a asp-controller="Analytics" asp-action="Recommendations" class="nav-link nav-icon-button @(controller == "Analytics" && title == "Smart Recommendations" ? "active is-selected" : "")" aria-current="@(controller == "Analytics" && title == "Smart Recommendations" ? "page" : null)">
                 <span class="nav-icon"><i class="bi bi-currency-dollar" aria-hidden="true"></i></span><span>Pricing</span>
             </a>
