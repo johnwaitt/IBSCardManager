@@ -1,0 +1,48 @@
+name: Build and test
+
+on:
+  push:
+    branches:
+      - master
+      - "feature/**"
+      - "chore/**"
+      - "fix/**"
+  pull_request:
+    branches:
+      - master
+
+permissions:
+  contents: read
+
+jobs:
+  build-and-test:
+    runs-on: windows-latest
+    timeout-minutes: 20
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up .NET 10
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.0.x
+
+      - name: Restore
+        run: dotnet restore IBSCardManager.slnx
+
+      - name: Build
+        run: dotnet build IBSCardManager.slnx --configuration Release --no-restore
+
+      - name: Test
+        run: dotnet test IBSCardManager.Tests/IBSCardManager.Tests.csproj --configuration Release --no-build --logger "trx;LogFileName=test-results.trx" --collect "XPlat Code Coverage"
+
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-results
+          path: |
+            IBSCardManager.Tests/TestResults/**/*.trx
+            IBSCardManager.Tests/TestResults/**/coverage.cobertura.xml
+          if-no-files-found: warn
