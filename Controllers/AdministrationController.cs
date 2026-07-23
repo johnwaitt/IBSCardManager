@@ -114,6 +114,20 @@ public sealed class AdministrationController : Controller
             OpenAiApiKeyMasked = _credentialVault.Mask(_openAiProviderOptions.ApiKeyEncrypted),
             OpenAiProjectId = string.IsNullOrWhiteSpace(_openAiProviderOptions.ProjectId) ? "Not configured" : _openAiProviderOptions.ProjectId,
             OpenAiOrganizationId = string.IsNullOrWhiteSpace(_openAiProviderOptions.OrganizationId) ? "Not configured" : _openAiProviderOptions.OrganizationId,
+            OpenAiEnabled = _openAiProviderOptions.Enabled && _openAiCardAnalysisOptions.EnableChatGptAnalysis,
+            OpenAiDefaultModel = _openAiProviderOptions.DefaultModel,
+            OpenAiVisionModel = _openAiProviderOptions.VisionModel,
+            OpenAiTemperature = _openAiProviderOptions.Temperature,
+            OpenAiMaximumTokens = _openAiProviderOptions.MaximumTokens,
+            OpenAiTimeoutSeconds = _openAiProviderOptions.TimeoutSeconds,
+            OpenAiRetryCount = _openAiProviderOptions.RetryCount,
+            OpenAiVisionEnabled = _openAiProviderOptions.EnableVision,
+            OpenAiOcrEnabled = _openAiProviderOptions.EnableOcr,
+            OpenAiCardIdentificationEnabled = _openAiProviderOptions.EnableCardIdentification,
+            OpenAiLearningEnabled = _openAiProviderOptions.EnableAiLearning,
+            OpenAiUsageStatisticsEnabled = _openAiProviderOptions.EnableUsageStatistics,
+            OpenAiEstimatedCost = _openAiProviderOptions.EstimatedCost,
+            OpenAiLastSuccessfulRequestUtc = _openAiProviderOptions.LastSuccessfulRequestUtc,
             EBayClientIdMasked = _credentialVault.Mask(_marketplaceProviderOptions.EBay.ClientIdEncrypted),
             EBayRefreshTokenMasked = _credentialVault.Mask(_marketplaceProviderOptions.EBay.RefreshTokenEncrypted),
             EncryptionAvailable = true,
@@ -136,17 +150,79 @@ public sealed class AdministrationController : Controller
 
         _openAiProviderOptions.ProjectId = input.ProjectId?.Trim() ?? string.Empty;
         _openAiProviderOptions.OrganizationId = input.OrganizationId?.Trim() ?? string.Empty;
+        _openAiProviderOptions.Enabled = true;
 
         if (!string.IsNullOrWhiteSpace(_openAiProviderOptions.VisionModel))
         {
             _openAiCardAnalysisOptions.VisionModel = _openAiProviderOptions.VisionModel;
         }
 
-        _openAiCardAnalysisOptions.EnableChatGptAnalysis = _openAiProviderOptions.Enabled;
+        _openAiCardAnalysisOptions.EnableChatGptAnalysis = true;
         _openAiCardAnalysisOptions.LocalAnalysisOnly = false;
 
-        _auditService.Record("Credential Updates", "OpenAI", "OpenAI credentials were updated and connected to scanner image analysis for this runtime session.");
+        _auditService.Record("Credential Updates", "OpenAI Save", "OpenAI credentials were added or edited and connected to scanner image analysis for this runtime session.");
         TempData["SecurityMessage"] = "OpenAI credentials saved securely and connected to the scanner. Use Test OpenAI Connection to verify access.";
+        return RedirectToAction(nameof(Security));
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public IActionResult ConnectOpenAi()
+    {
+        if (string.IsNullOrWhiteSpace(_openAiProviderOptions.ApiKeyEncrypted) && string.IsNullOrWhiteSpace(_openAiCardAnalysisOptions.ApiKey))
+        {
+            TempData["SecurityMessage"] = "Add and save an OpenAI API key before connecting.";
+            return RedirectToAction(nameof(Security));
+        }
+
+        if (string.IsNullOrWhiteSpace(_openAiCardAnalysisOptions.ApiKey) && !string.IsNullOrWhiteSpace(_openAiProviderOptions.ApiKeyEncrypted))
+        {
+            try
+            {
+                _openAiCardAnalysisOptions.ApiKey = _credentialVault.Unprotect(_openAiProviderOptions.ApiKeyEncrypted);
+            }
+            catch
+            {
+                TempData["SecurityMessage"] = "The protected OpenAI key could not be opened for the current Windows user. Edit and save the key again.";
+                return RedirectToAction(nameof(Security));
+            }
+        }
+
+        _openAiProviderOptions.Enabled = true;
+        _openAiCardAnalysisOptions.EnableChatGptAnalysis = true;
+        _openAiCardAnalysisOptions.LocalAnalysisOnly = false;
+        _auditService.Record("Provider Changes", "OpenAI Connect", "OpenAI was connected to scanner analysis.");
+        TempData["SecurityMessage"] = "OpenAI connected. Run Test OpenAI Connection to verify live access.";
+        return RedirectToAction(nameof(Security));
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public IActionResult DisconnectOpenAi()
+    {
+        _openAiProviderOptions.Enabled = false;
+        _openAiCardAnalysisOptions.EnableChatGptAnalysis = false;
+        _openAiCardAnalysisOptions.LocalAnalysisOnly = true;
+        _auditService.Record("Provider Changes", "OpenAI Disconnect", "OpenAI was disconnected. Protected credentials were retained.");
+        TempData["SecurityMessage"] = "OpenAI disconnected. The protected credentials were kept and can be reconnected later.";
+        return RedirectToAction(nameof(Security));
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public IActionResult RemoveOpenAiCredentials()
+    {
+        _openAiProviderOptions.Enabled = false;
+        _openAiProviderOptions.ApiKeyEncrypted = string.Empty;
+        _openAiProviderOptions.ProjectId = string.Empty;
+        _openAiProviderOptions.OrganizationId = string.Empty;
+        _openAiProviderOptions.LastSuccessfulRequestUtc = null;
+        _openAiCardAnalysisOptions.ApiKey = string.Empty;
+        _openAiCardAnalysisOptions.EnableChatGptAnalysis = false;
+        _openAiCardAnalysisOptions.LocalAnalysisOnly = true;
+
+        _auditService.Record("Credential Updates", "OpenAI Remove", "OpenAI credentials were removed and the provider was disconnected.");
+        TempData["SecurityMessage"] = "OpenAI credentials removed. Add a new API key to connect again.";
         return RedirectToAction(nameof(Security));
     }
 
