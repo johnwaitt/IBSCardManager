@@ -23,7 +23,7 @@ builder.Services.AddScoped<IMasterCatalogService, LocalMasterCatalogService>();
 builder.Services.AddScoped<ICatalogLookupService, LocalCatalogLookupService>();
 builder.Services.AddScoped<ICatalogSearchService, LocalCatalogSearchService>();
 builder.Services.AddScoped<ICatalogVersionService, LocalCatalogVersionService>();
-builder.Services.AddScoped<ICatalogImportService, LocalCatalogImportService>();
+builder.Services.AddScoped<ICatalogImportService, CatalogImportEngine>();
 builder.Services.AddScoped<ICatalogImageService, LocalCatalogImageService>();
 builder.Services.AddScoped<ICatalogDatabaseProvider, LocalCatalogDatabaseProvider>();
 builder.Services.AddScoped<ICatalogValidationService, CatalogValidationService>();

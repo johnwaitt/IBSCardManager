@@ -35,47 +35,23 @@
 
         <nav class="sidebar-nav" aria-label="Main navigation">
             <div class="nav-section-label">Main</div>
-            <a asp-controller="Home" asp-action="Index" class="nav-link nav-icon-button @(controller == "Home" ? "active is-selected" : "")" aria-current="@(controller == "Home" ? "page" : null)">
-                <span class="nav-icon"><i class="bi bi-speedometer2" aria-hidden="true"></i></span><span>Dashboard</span>
-            </a>
-            <a asp-controller="Cards" asp-action="Index" class="nav-link nav-icon-button @(controller == "Cards" ? "active is-selected" : "")" aria-current="@(controller == "Cards" ? "page" : null)">
-                <span class="nav-icon"><i class="bi bi-collection" aria-hidden="true"></i></span><span>Inventory</span>
-            </a>
-            <a asp-controller="Scanner" asp-action="Index" class="nav-link nav-icon-button @(controller == "Scanner" ? "active is-selected" : "")" aria-current="@(controller == "Scanner" ? "page" : null)">
-                <span class="nav-icon"><i class="bi bi-upc-scan" aria-hidden="true"></i></span><span>Scanner</span>
-                <span class="nav-badge">AI</span>
-            </a>
-            <a asp-controller="Products" asp-action="Index" class="nav-link nav-icon-button @(controller == "Products" || controller == "Checklists" ? "active is-selected" : "")" aria-current="@(controller == "Products" || controller == "Checklists" ? "page" : null)">
-                <span class="nav-icon"><i class="bi bi-database" aria-hidden="true"></i></span><span>Master Database</span>
-            </a>
-            <a asp-controller="Analytics" asp-action="Recommendations" class="nav-link nav-icon-button @(controller == "Analytics" && title == "Smart Recommendations" ? "active is-selected" : "")" aria-current="@(controller == "Analytics" && title == "Smart Recommendations" ? "page" : null)">
-                <span class="nav-icon"><i class="bi bi-currency-dollar" aria-hidden="true"></i></span><span>Pricing</span>
-            </a>
-            <a href="#" class="nav-link nav-icon-button disabled-link" title="Marketplace provider pages are in Administration">
-                <span class="nav-icon"><i class="bi bi-shop" aria-hidden="true"></i></span><span>Marketplace</span>
-            </a>
-            <a asp-controller="Analytics" asp-action="Index" class="nav-link nav-icon-button @(controller == "Analytics" ? "active is-selected" : "")" aria-current="@(controller == "Analytics" ? "page" : null)">
-                <span class="nav-icon"><i class="bi bi-graph-up-arrow" aria-hidden="true"></i></span><span>Analytics</span>
-            </a>
-            <a asp-controller="Analytics" asp-action="Report" class="nav-link nav-icon-button @(controller == "Analytics" && title == "Reports" ? "active is-selected" : "")">
-                <span class="nav-icon"><i class="bi bi-bar-chart" aria-hidden="true"></i></span><span>Reports</span>
-            </a>
-            <a asp-controller="Administration" asp-action="Index" class="nav-link nav-icon-button @(controller == "Administration" ? "active is-selected" : "")" aria-current="@(controller == "Administration" ? "page" : null)">
-                <span class="nav-icon"><i class="bi bi-sliders" aria-hidden="true"></i></span><span>Administration</span>
-            </a>
-            <a asp-controller="Home" asp-action="About" class="nav-link nav-icon-button @(controller == "Home" && title == "About" ? "active is-selected" : "")" aria-current="@(controller == "Home" && title == "About" ? "page" : null)">
-                <span class="nav-icon"><i class="bi bi-question-circle" aria-hidden="true"></i></span><span>Help</span>
-            </a>
+            <a asp-controller="Home" asp-action="Index" class="nav-link nav-icon-button @(controller == "Home" ? "active is-selected" : "")" aria-current="@(controller == "Home" ? "page" : null)"><span class="nav-icon"><i class="bi bi-speedometer2" aria-hidden="true"></i></span><span>Dashboard</span></a>
+            <a asp-controller="Cards" asp-action="Index" class="nav-link nav-icon-button @(controller == "Cards" ? "active is-selected" : "")" aria-current="@(controller == "Cards" ? "page" : null)"><span class="nav-icon"><i class="bi bi-collection" aria-hidden="true"></i></span><span>Inventory</span></a>
+            <a asp-controller="Scanner" asp-action="Index" class="nav-link nav-icon-button @(controller == "Scanner" ? "active is-selected" : "")" aria-current="@(controller == "Scanner" ? "page" : null)"><span class="nav-icon"><i class="bi bi-upc-scan" aria-hidden="true"></i></span><span>Scanner</span><span class="nav-badge">AI</span></a>
+            <a asp-controller="Products" asp-action="Index" class="nav-link nav-icon-button @(controller == "Products" || controller == "Checklists" ? "active is-selected" : "")" aria-current="@(controller == "Products" || controller == "Checklists" ? "page" : null)"><span class="nav-icon"><i class="bi bi-database" aria-hidden="true"></i></span><span>Master Database</span></a>
+            <a asp-controller="CatalogImport" asp-action="Index" class="nav-link nav-icon-button @(controller == "CatalogImport" ? "active is-selected" : "")" aria-current="@(controller == "CatalogImport" ? "page" : null)"><span class="nav-icon"><i class="bi bi-file-earmark-arrow-up" aria-hidden="true"></i></span><span>Catalog Import</span></a>
+            <a asp-controller="CatalogImportHistory" asp-action="Index" class="nav-link nav-icon-button @(controller == "CatalogImportHistory" ? "active is-selected" : "")" aria-current="@(controller == "CatalogImportHistory" ? "page" : null)"><span class="nav-icon"><i class="bi bi-clock-history" aria-hidden="true"></i></span><span>Import History</span></a>
+            <a asp-controller="Analytics" asp-action="Recommendations" class="nav-link nav-icon-button @(controller == "Analytics" && title == "Smart Recommendations" ? "active is-selected" : "")" aria-current="@(controller == "Analytics" && title == "Smart Recommendations" ? "page" : null)"><span class="nav-icon"><i class="bi bi-currency-dollar" aria-hidden="true"></i></span><span>Pricing</span></a>
+            <a href="#" class="nav-link nav-icon-button disabled-link" title="Marketplace provider pages are in Administration"><span class="nav-icon"><i class="bi bi-shop" aria-hidden="true"></i></span><span>Marketplace</span></a>
+            <a asp-controller="Analytics" asp-action="Index" class="nav-link nav-icon-button @(controller == "Analytics" ? "active is-selected" : "")" aria-current="@(controller == "Analytics" ? "page" : null)"><span class="nav-icon"><i class="bi bi-graph-up-arrow" aria-hidden="true"></i></span><span>Analytics</span></a>
+            <a asp-controller="Analytics" asp-action="Report" class="nav-link nav-icon-button @(controller == "Analytics" && title == "Reports" ? "active is-selected" : "")"><span class="nav-icon"><i class="bi bi-bar-chart" aria-hidden="true"></i></span><span>Reports</span></a>
+            <a asp-controller="Administration" asp-action="Index" class="nav-link nav-icon-button @(controller == "Administration" ? "active is-selected" : "")" aria-current="@(controller == "Administration" ? "page" : null)"><span class="nav-icon"><i class="bi bi-sliders" aria-hidden="true"></i></span><span>Administration</span></a>
+            <a asp-controller="Home" asp-action="About" class="nav-link nav-icon-button @(controller == "Home" && title == "About" ? "active is-selected" : "")" aria-current="@(controller == "Home" && title == "About" ? "page" : null)"><span class="nav-icon"><i class="bi bi-question-circle" aria-hidden="true"></i></span><span>Help</span></a>
         </nav>
 
         <div class="sidebar-footer">
-            <div class="status-card">
-                <span class="status-dot" aria-hidden="true"></span>
-                <div><strong>Local database</strong><small>Connected and ready</small></div>
-            </div>
-            <button class="theme-toggle" id="themeToggle" type="button" aria-label="Toggle dark mode">
-                <span id="themeIcon"><i class="bi bi-moon-stars" aria-hidden="true"></i></span><span id="themeLabel">Dark mode</span>
-            </button>
+            <div class="status-card"><span class="status-dot" aria-hidden="true"></span><div><strong>Local database</strong><small>Connected and ready</small></div></div>
+            <button class="theme-toggle" id="themeToggle" type="button" aria-label="Toggle dark mode"><span id="themeIcon"><i class="bi bi-moon-stars" aria-hidden="true"></i></span><span id="themeLabel">Dark mode</span></button>
         </div>
     </aside>
 
@@ -83,21 +59,11 @@
 
     <main class="main-content">
         <header class="topbar">
-            <div class="topbar-left">
-                <button class="mobile-menu" id="mobileMenu" type="button" aria-label="Open navigation"><i class="bi bi-list" aria-hidden="true"></i></button>
-                <div>
-                    <div class="topbar-eyebrow">IBS Baseball Card Manager</div>
-                    <strong class="topbar-title">@title</strong>
-                </div>
-            </div>
-            <div class="topbar-actions">
-                    <a asp-controller="Cards" asp-action="Create" class="btn btn-primary topbar-primary primary-icon-button"><span class="btn-icon"><i class="bi bi-plus-circle" aria-hidden="true"></i></span><span>Add card</span></a>
-                </div>
+            <div class="topbar-left"><button class="mobile-menu" id="mobileMenu" type="button" aria-label="Open navigation"><i class="bi bi-list" aria-hidden="true"></i></button><div><div class="topbar-eyebrow">IBS Baseball Card Manager</div><strong class="topbar-title">@title</strong></div></div>
+            <div class="topbar-actions"><a asp-controller="Cards" asp-action="Create" class="btn btn-primary topbar-primary primary-icon-button"><span class="btn-icon"><i class="bi bi-plus-circle" aria-hidden="true"></i></span><span>Add card</span></a></div>
         </header>
         <section class="content-area">@RenderBody()</section>
-        <footer class="app-footer px-3 py-2 text-muted small">
-            IBS Baseball Card Manager • Version v@appVersion
-        </footer>
+        <footer class="app-footer px-3 py-2 text-muted small">IBS Baseball Card Manager • Version v@appVersion</footer>
     </main>
 </div>
 <script src="~/lib/jquery/dist/jquery.min.js"></script>
