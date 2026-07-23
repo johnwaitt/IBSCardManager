@@ -12,6 +12,7 @@ public sealed class AdministrationController : Controller
     private readonly IProviderManager _providerManager;
     private readonly ICredentialVaultService _credentialVault;
     private readonly OpenAiProviderOptions _openAiProviderOptions;
+    private readonly OpenAiCardAnalysisOptions _openAiCardAnalysisOptions;
     private readonly MarketplaceProviderOptions _marketplaceProviderOptions;
     private readonly IAdministrationAuditService _auditService;
     private readonly IFeatureFlagService _featureFlagService;
@@ -23,6 +24,7 @@ public sealed class AdministrationController : Controller
         IProviderManager providerManager,
         ICredentialVaultService credentialVault,
         IOptions<OpenAiProviderOptions> openAiProviderOptions,
+        IOptions<OpenAiCardAnalysisOptions> openAiCardAnalysisOptions,
         IOptions<MarketplaceProviderOptions> marketplaceProviderOptions,
         IAdministrationAuditService auditService,
         IFeatureFlagService featureFlagService,
@@ -33,6 +35,7 @@ public sealed class AdministrationController : Controller
         _providerManager = providerManager;
         _credentialVault = credentialVault;
         _openAiProviderOptions = openAiProviderOptions.Value;
+        _openAiCardAnalysisOptions = openAiCardAnalysisOptions.Value;
         _marketplaceProviderOptions = marketplaceProviderOptions.Value;
         _auditService = auditService;
         _featureFlagService = featureFlagService;
@@ -66,6 +69,18 @@ public sealed class AdministrationController : Controller
         _auditService.Record("Provider Changes", "Test Connection", $"{providerName}: {(result.Success ? "Success" : "Failure")} - {result.Message}");
         TempData["ConnectionsMessage"] = $"{providerName}: {result.Message}";
         return RedirectToAction(nameof(Connections));
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> TestOpenAiConnection(CancellationToken cancellationToken)
+    {
+        var result = await _providerManager.TestConnectionAsync("OpenAI", cancellationToken);
+        _auditService.Record("Provider Changes", "Test OpenAI Connection", $"OpenAI: {(result.Success ? "Success" : "Failure")} - {result.Message}");
+        TempData["SecurityMessage"] = result.Success
+            ? "OpenAI connection succeeded. The scanner can now analyze accepted card images."
+            : $"OpenAI connection failed: {result.Message}";
+        return RedirectToAction(nameof(Security));
     }
 
     [HttpPost]
@@ -114,14 +129,24 @@ public sealed class AdministrationController : Controller
     {
         if (!string.IsNullOrWhiteSpace(input.ApiKey))
         {
-            _openAiProviderOptions.ApiKeyEncrypted = _credentialVault.Protect(input.ApiKey.Trim());
+            var apiKey = input.ApiKey.Trim();
+            _openAiProviderOptions.ApiKeyEncrypted = _credentialVault.Protect(apiKey);
+            _openAiCardAnalysisOptions.ApiKey = apiKey;
         }
 
         _openAiProviderOptions.ProjectId = input.ProjectId?.Trim() ?? string.Empty;
         _openAiProviderOptions.OrganizationId = input.OrganizationId?.Trim() ?? string.Empty;
 
-        _auditService.Record("Credential Updates", "OpenAI", "OpenAI credentials were updated through Administration/Security.");
-        TempData["SecurityMessage"] = "OpenAI credentials updated in secure vault memory for this runtime session.";
+        if (!string.IsNullOrWhiteSpace(_openAiProviderOptions.VisionModel))
+        {
+            _openAiCardAnalysisOptions.VisionModel = _openAiProviderOptions.VisionModel;
+        }
+
+        _openAiCardAnalysisOptions.EnableChatGptAnalysis = _openAiProviderOptions.Enabled;
+        _openAiCardAnalysisOptions.LocalAnalysisOnly = false;
+
+        _auditService.Record("Credential Updates", "OpenAI", "OpenAI credentials were updated and connected to scanner image analysis for this runtime session.");
+        TempData["SecurityMessage"] = "OpenAI credentials saved securely and connected to the scanner. Use Test OpenAI Connection to verify access.";
         return RedirectToAction(nameof(Security));
     }
 
