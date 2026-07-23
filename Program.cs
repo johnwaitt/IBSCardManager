@@ -68,7 +68,9 @@ builder.Services.AddScoped<ICollectionInsightsService, CollectionInsightsService
 builder.Services.AddSingleton<AnalyticsRecalculationQueue>();
 builder.Services.AddSingleton<IAnalyticsRecalculationQueue>(sp => sp.GetRequiredService<AnalyticsRecalculationQueue>());
 builder.Services.AddHostedService<AnalyticsRecalculationWorker>();
+builder.Services.Configure<ScannerImportOptions>(
 
+    builder.Configuration.GetSection(ScannerImportOptions.SectionName));
 var connectionString =
     builder.Configuration.GetConnectionString(
         "CardManagerConnection")
