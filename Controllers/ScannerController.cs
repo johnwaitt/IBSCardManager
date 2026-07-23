@@ -240,6 +240,11 @@ public class ScannerController : Controller
             safeStem = Guid.NewGuid().ToString("N");
         }
 
+        // Guard against path-too-long: suffix is ~40 chars; NTFS filename limit is 255.
+        const int maxStemLength = 200;
+        if (safeStem.Length > maxStemLength)
+            safeStem = safeStem[..maxStemLength].TrimEnd('-', '_');
+
         var fileName =
             $"{safeStem}-{side}-accepted-{DateTime.UtcNow:yyyyMMddHHmmssfff}.jpg";
         var path = Path.Combine(intakeFolder, fileName);
